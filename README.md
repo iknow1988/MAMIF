@@ -2,13 +2,13 @@
 Modeling animal movement in forest
 
 ## Install to load las file
-Install laspy library
+pip install laspy
 
 ## Install to plot cloud points
-install pptk library
+pip install pptk
 
 ## Install to load e57 file
-install pye57 library
+pip install pye57
 conda install xerces-c
 
 ## Python Requirement
