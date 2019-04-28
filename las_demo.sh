@@ -15,7 +15,7 @@ CLASS_OUTPUT=${TARGET_LAS/".las"/"._ghc.las"}
 
 
 # For mac
-${WINE_DIR} ${LAS_GROUND} -i "${TARGET_LAS}" -o "${GROUND_OUTPUT}" -step 1
+${WINE_DIR} ${LAS_GROUND} -i "${TARGET_LAS}" -o "${GROUND_OUTPUT}" -step 1 -not_airborne
 
 ${WINE_DIR} ${LAS_HEIGHT} -i ${GROUND_OUTPUT} -o "${HEIGHT_OUTPUT}" 
 
