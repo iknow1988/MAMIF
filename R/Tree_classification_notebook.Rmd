@@ -1,0 +1,275 @@
+---
+title: "Tree classification notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+setwd("/Users/ethanchen/Desktop/2019SEM1/DataProject/Shared_repo/MAMIF/")
+
+
+library(lidR)
+library(dplyr)
+# To plot raster layer in 3D.
+library(rasterVis)
+```
+
+
+```{r}
+
+#### load and only use xyz coordinate
+dat = lidR::readLAS(files = "../SP03_Stony.las" ,select = "xyz")
+
+pre_processing <- function(las_df , boundary,shrunk_factor =0.05){
+      
+      dat <- las_df@data
+      # remove point that are way too high than all other points.
+      Z_upperbound = quantile(x = dat$Z , prob = 0.9999)
+      
+      xy_filtered = dat %>% filter(dat$X > -boundary , dat$X < boundary,
+                                   dat$Y > -boundary , dat$Y < boundary , dat$Z < Z_upperbound) 
+      
+      small_dat = sample_n(xy_filtered , nrow(xy_filtered) * shrunk_factor )
+      
+      return(LAS(small_dat))
+}
+
+
+```
+
+
+
+### Sample a small set of data. 20 meters square from the center. 
+```{r}
+small_dat <- pre_processing(las_df = dat ,boundary = 25  , shrunk_factor = 0.4)
+plot(small_dat)
+```
+
+
+
+### Ground classification.
+```{r}
+# Using the Cloth Simulation Filter
+small_dat_with_ground <- lasground(small_dat, csf())
+plot(small_dat_with_ground, color = "Classification")
+```
+
+### Calculate the digital terrain model.
+This would be useful to flatten the ground and also use raster_layer (from grid_canopy) we got DSM (digital surface model)
+By subtracting the 2 ,DSM - DTM = CHM , we get the canopy height model.
+
+```{r}
+dtm = grid_terrain(small_dat_with_ground, algorithm = knnidw(k = 6L, p = 2))
+plot(dtm, col = terrain.colors(50))
+```
+
+## Here we flatten the ground.
+```{r}
+small_dat_with_ground <- small_dat_with_ground - dtm
+plot(small_dat_with_ground)
+```
+
+```{r}
+library(rasterVis)
+
+plot_dtm3d(dtm)
+
+```
+
+
+### Filter out the ground point.
+
+```{r}
+
+filter_class <- function(las_df , class_index){
+      tmp_df <- las_df@data
+      tmp_df <- tmp_df %>% filter(tmp_df$Classification == class_index)
+      
+      return(LAS(tmp_df))
+}
+```
+
+```{r}
+only_ground = filter_class(small_dat_with_ground , 2)
+small_dat_no_ground = filter_class(small_dat_with_ground , 1)
+plot(small_dat_no_ground)
+```
+
+
+##
+
+##Grid_canopy
+
+
+Creates a digital surface model (DSM) using several possible algorithms. If the user provides a normalised point cloud (after subtract the dtm), the output is indeed a canopy height model (CHM).
+
+higher the radius_length ,smoother the surface of the raster layer and less empty pixel.
+```{r}
+# Points-to-raster algorithm with a resolution of 0.5 meters replacing each
+# point by a 0.2 meter radius circle of 8 points
+# higher the radius_length ,smoother the surface of the raster layer.
+radius_length = 0.2
+chm <- grid_canopy(small_dat_with_ground ,0.5, p2r(radius_length))
+
+chm2 <- grid_canopy(small_dat_with_ground ,0.5, p2r(1))
+
+chm3 <- grid_canopy(small_dat_with_ground ,0.1, p2r(radius_length))
+col <- height.colors(30)
+
+plot(chm, col = col , main='Radius_length 0.2 meter')
+plot(chm2 , col=col , main='Radius_length 1 meter')
+plot(chm3 , col=col ,main = 'With higher resolution')
+```
+
+## Ploting the CHM (raster layer in 3D)
+```{r}
+plot3D(chm)
+```
+
+## Smooth the raster surface.
+```{r}
+# Smooth the curve 
+ker <- matrix(1,3,3)
+# Calculate focal ("moving window") values for the neighborhood of focal cells using a matrix of weights, perhaps in combination with a function.
+smooth_chm <- raster::focal(chm, w = ker, fun = mean, na.rm = TRUE)
+plot(smooth_chm, col = col)
+plot3D(smooth_chm)
+```
+
+
+### Plot the tree top.
+It implements an algorithm for tree detection based on a local maximum filter
+
+Problem : changing the parameter ws (size of the moving window used to detect the local maxima) effect the number of treeID in the output. The higher the ws the lesser number of tree it identifys. However, the lower the ws, it identifies a tree a multiple trees.
+# point-cloud-based plot
+```{r}
+# ws:Length or diameter of the moving window used to the detect the local maxima in the unit of the input data (usually meters)
+# hmin:min height of a tree.
+ttops <- tree_detection(smooth_chm, lmf(ws=4, hmin=2))
+# A SpatialPointsDataFrame with an attribute Z for the tree tops and treeID with an individual ID for each tree.
+
+x = plot(small_dat_no_ground)
+
+add_treetops3d(x, ttops)
+
+```
+
+```{r}
+length(ttops$treeID)
+```
+
+# raster-based
+```{r}
+raster::plot(chm, col = height.colors(30))
+sp::plot(ttops, add = TRUE)
+```
+
+```{r}
+concave_hulls = tree_hulls(small_dat_no_ground, "concave")
+sp::plot(concave_hulls)
+```
+
+
+## Given the raster layer and tree top, now we implement the individual Tree Segmentation Algorithm
+
+```{r}
+col <- pastel.colors(200)
+las <- lastrees(small_dat_no_ground, dalponte2016(chm, ttops))
+plot(las,color = "treeID", colorPalette = col)
+```
+
+
+To refince the above result.
+```{r}
+length(unique(las@data$treeID))
+length(unique(na.omit(las@data$treeID)))
+```
+
+### Comparing the effect of length radius in point to raster of the number treeID in tree segmentation.
+```{r}
+
+compute_grid_canopy <- function(las_df,radius_length, resolution = 0.5 , smooth= TRUE){
+  
+  chm <- grid_canopy(las = las_df , res = resolution , p2r(radius_length))
+  
+  if (smooth) {
+      # Smooth the curve 
+      ker <- matrix(1,3,3)
+      # Calculate focal ("moving window") values for the neighborhood of focal cells using a matrix of weights, perhaps in combination with a function.
+      
+      chm <- raster::focal(chm, w = ker, fun = mean, na.rm = TRUE)
+  }
+
+  return(chm)
+}
+
+chm1 <- compute_grid_canopy(las_df = small_dat_no_ground , radius_length = 0.2)
+
+ttops1 <- tree_detection(chm1, lmf(ws=4, hmin=2))
+
+chm2 <- compute_grid_canopy(las_df = small_dat_no_ground , radius_length = 1)
+
+ttops2 <- tree_detection(chm2, lmf(ws=4, hmin=2))
+
+print(length(ttops1$treeID))
+print(length(ttops2$treeID))
+```
+
+Tree segmentation algorithms
+
+* p2r_radius_length:  higher the radius_length ,smoother the surface of the raster layer and less empty pixel.
+
+* lmf_ws: Used to compute the tree top. Length or diameter of the moving window used to the detect the local maxima in the unit of the input data (usually meters). I think set this number to approximatily the size of the crown would make more sense.
+
+* 
+```{r}
+
+
+tree_segmentation <- function(las_df, p2r_radius_length=0.2, lmf_ws=4, algorithm =1,resolution = 0.5 , smooth= TRUE){
+  
+  chm <- compute_grid_canopy(las_df = las_df , radius_length = p2r_radius_length ,resolution = resolution , smooth = smooth)
+  
+  ttops <- tree_detection(chm, lmf(ws=lmf_ws, hmin=2))
+  print(length(ttops$treeID))
+  
+  
+  if (algorithm == 1){
+    las   <- lastrees(las, silva2016(chm, ttops))
+  }else if(algorithm == 2){
+    las   <- lastrees(las, dalponte2016(chm, ttops))
+  }
+  n_tree <- length(na.omit(unique(las@data$treeID)))
+  
+  
+  print(paste("Number of tree : " ,n_tree ))
+  
+  return(las)
+}
+
+las <- tree_segmentation(small_dat_no_ground , p2r_radius_length = 0.5 , lmf_ws = 6.5 , algorithm = 2)
+col <- pastel.colors(200)
+plot(las,color = "treeID", colorPalette = col )
+```
+
+
+
+## Calculate statistics we are interested in a tree.
+```{r}
+metrics = tree_metrics(las, list("max_height of a tree"=max(Z)))
+metrics
+```
+
+
+```{r}
+print(metrics$treeID)
+print(metrics$max_z)
+```
+
+```{r}
+S = las@data %>% filter(las@data$treeID==18) %>% select(Z) 
+mean(S$Z ,na.rm=TRUE)
+max(S)
+```
+
+
