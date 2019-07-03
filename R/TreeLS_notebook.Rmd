@@ -1,0 +1,203 @@
+---
+title: "TreeLS"
+output: html_notebook
+---
+
+```{r}
+library("TreeLS")
+setwd("/Users/ethanchen/Desktop/2019SEM1/DataProject/Shared_repo/MAMIF/")
+# open artificial sample file
+
+tls = TreeLS::readTLS("../SP03_Stony.las" ,select = "xyz")
+
+```
+
+```{r}
+tls@data
+```
+
+
+
+
+```{r}
+library(dplyr)
+boundary = 10
+shrunk_factor = 0.005
+dat <- tls@data
+
+
+xy_filtered = dat %>% filter(dat$X > -boundary , dat$X < boundary,
+                                   dat$Y > -boundary , dat$Y < boundary) 
+      
+small_dat = LAS(sample_n(xy_filtered , nrow(xy_filtered) * shrunk_factor ))
+plot(small_dat)
+```
+
+
+```{r}
+small_dat
+```
+
+
+
+```{r}
+# normalize the point cloud
+small_dat_normal = tlsNormalize(small_dat, keepGround = T)
+plot(small_dat_normal, color='Classification')
+```
+
+
+```{r}
+small_dat_normal
+```
+
+```{r}
+# extract the tree map from a thinned point cloud
+thin = tlsSample(small_dat_normal, voxelize(0.3))         
+
+# lower min_density -> more tree estimate
+#between 0 and 1 - minimum point density within a pixel evaluated on
+#the Hough Transform - i.e. only dense point clousters will undergo circle search.
+map = treeMap(small_dat_normal, map.hough(min_density = 0.0000000000000000001))
+
+# visualize tree map in 2D and 3D
+xymap = treePositions(map , plot =TRUE)
+
+plot(map, color='Radii')
+```
+
+
+```{r}
+map
+```
+
+
+```{r}
+length(xymap$TreeID)
+```
+
+
+
+```{r}
+col <- pastel.colors(200)
+
+
+
+
+plot(map,color = "TreeID",col=col )
+
+```
+
+```{r}
+small_dat_normal
+```
+
+```{r}
+# classify stem points
+small_dat_normal = stemPoints(small_dat_normal, map)
+
+# extract measures
+#seg = stemSegmentation(small_dat_normal, sgmt.ransac.circle(n = 10))
+
+# view the results
+#tlsPlot(small_dat_normal, seg)
+#tlsPlot(tls, seg, map)
+```
+
+
+```{r}
+small_dat_normal
+plot(small_dat_normal ,color='Stem' , col=col)
+plot(small_dat_normal ,color='Segment' , col=col)
+```
+```{r}
+plot(small_dat_normal, color="TreeID")
+```
+
+```{r}
+length(unique(small_dat_normal@data$TreeID))
+```
+```{r}
+small_dat_normal
+```
+
+```{r}
+small_dat_normal@data$TreeID
+```
+
+```{r}
+library(dplyr)
+
+small_dat_normal@data %>% group_by(TreeID) %>% summarise(radius=max(Radius) , max_height=max(Z))
+```
+```{r}
+tmp = small_dat_normal@data %>% group_by(TreeID) %>% summarise(radius=max(Radius), max_height=max(Z))
+typeof(tmp)
+tmp$radius
+
+boundary_above = as.double(quantile(tmp$radius , prob=c(0.8)))
+
+boundary_above  
+
+tmp %>% filter(radius >= boundary_above) 
+
+tmp %>% filter(radius >= boundary_above) %>% summarise(canopy_height = mean(max_height))
+
+mean(tmp$max_height)
+```
+
+```{r}
+plot(tmp$radius , tmp$max_height)
+```
+
+
+```{r}
+library(lidR)
+library(rasterVis)
+radius_length = 0.2
+chm <- grid_canopy(small_dat_normal ,0.5, p2r(radius_length))
+
+plot(chm, main='Canopy height model')
+plot3D(chm)
+
+```
+
+
+```{r}
+
+
+source("utils.R")
+
+las <- tree_segmentation(small_dat_normal , p2r_radius_length = 0.5 , lmf_ws = 2.5 , algorithm = 2)
+
+las
+```
+```{r}
+metrics = tree_metrics(las, list("max_height of a tree"=max(Z)))
+mean(metrics$`max_height of a tree`)
+```
+
+
+```{r}
+
+data = small_dat_normal@data
+data
+plot(LAS(subset(data, c(TreeID==139 | TreeID==145))%>% select(1:10)) , color=Radius,col=col)
+```
+
+
+```{r}
+######Bonus Tree Crown Segmentation
+
+library(dplyr)
+las<- lastrees(small_dat,li2012(R=3,speed_up = 5))
+col <- pastel.colors(200)
+plot(las, color = "treeID", colorPalette = col)
+metric<- tree_metrics(las,.stdtreemetrics)
+hulls<- tree_hulls(las)
+hulls@data<- dplyr::left_join(hulls@data, metric@data)
+spplot(hulls, "Z")
+
+hulls
+```
+

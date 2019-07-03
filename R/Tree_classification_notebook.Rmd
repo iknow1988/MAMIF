@@ -75,6 +75,7 @@ library(rasterVis)
 
 plot_dtm3d(dtm)
 
+plot3D(dtm)
 ```
 
 
@@ -235,9 +236,9 @@ tree_segmentation <- function(las_df, p2r_radius_length=0.2, lmf_ws=4, algorithm
   
   
   if (algorithm == 1){
-    las   <- lastrees(las, silva2016(chm, ttops))
+    las   <- lastrees(las_df, silva2016(chm, ttops))
   }else if(algorithm == 2){
-    las   <- lastrees(las, dalponte2016(chm, ttops))
+    las   <- lastrees(las_df, dalponte2016(chm, ttops))
   }
   n_tree <- length(na.omit(unique(las@data$treeID)))
   
