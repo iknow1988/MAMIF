@@ -58,7 +58,7 @@ thin = tlsSample(small_dat_normal, voxelize(0.3))
 # lower min_density -> more tree estimate
 #between 0 and 1 - minimum point density within a pixel evaluated on
 #the Hough Transform - i.e. only dense point clousters will undergo circle search.
-map = treeMap(small_dat_normal, map.hough(min_density = 0.0000000000000000001))
+map = treeMap(small_dat_normal, map.hough(min_density = 0.00000000000001))
 
 # visualize tree map in 2D and 3D
 xymap = treePositions(map , plot =TRUE)
@@ -68,7 +68,7 @@ plot(map, color='Radii')
 
 
 ```{r}
-map
+map@data
 ```
 
 
@@ -106,7 +106,7 @@ small_dat_normal = stemPoints(small_dat_normal, map)
 
 
 ```{r}
-small_dat_normal
+small_dat_normal@data
 plot(small_dat_normal ,color='Stem' , col=col)
 plot(small_dat_normal ,color='Segment' , col=col)
 ```
@@ -199,5 +199,7 @@ hulls@data<- dplyr::left_join(hulls@data, metric@data)
 spplot(hulls, "Z")
 
 hulls
+
+las
 ```
 

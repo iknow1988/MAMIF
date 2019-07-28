@@ -18,7 +18,7 @@ library(dplyr)
 library(rgl)
 # To plot raster layer in 3D.
 library(rasterVis)
-
+library("TreeLS")
 library("styler")
 source("../utils.R")
 
@@ -27,6 +27,9 @@ dat <- lidR::readLAS(files = "../../Shared_repo/SP03_Stony.las", select = "xyz")
 
 dataPath <- "/Users/ethanchen/Desktop/2019SEM1/DataProject/Shared_repo/"
 
+distance <- function(p1 , p2){
+  return(sqrt((p1$X - p2$X)^2 + (p1$Y - p2$Y)^2))
+}
 
 
 # 06-navlist.R
@@ -117,9 +120,6 @@ ui <- navbarPage(title = "Phase 1 Forest Data Analysis",
                             p("It implements an algorithm for tree detection based on a local maximum filter
 Problem : changing the parameter ws (size of the moving window used to detect the local maxima) effect the number of treeID in the output. The higher the ws the lesser number of tree it identifys. However, the lower the ws, it identifies a tree a multiple trees."),
                             p('ws:Length or diameter of the moving window used to the detect the local maxima in the unit of the input data (usually meters)'),
-                            
-                            
-                            
                             sidebarPanel(width=12,
                                          
                                          # Input: Slider for the number of bins ----
@@ -137,9 +137,43 @@ Problem : changing the parameter ws (size of the moving window used to detect th
                     
                             
                         )
-                 )
-                 
+                 ),
                 
+                ######################################################
+                ## START SECTION 3 Tree trunk radius estimate
+                ######################################################
+                 
+                tabPanel(title = "Section 3 : Tree trunk radius estimate",
+                        
+                             
+                             # Sidebar panel for inputs ----
+                             sidebarPanel(width=6,
+                                          
+                                          # Input: Slider for the number of bins ----
+                                          sliderInput(
+                                              inputId = "chm_radius_length",
+                                              label = "Radius Length ( r ) in meters",
+                                              min = 0.1,
+                                              max = 5,
+                                              value = 0.2
+                                          ), # Input: Slider for the number of bins ----
+                                          sliderInput(
+                                              inputId = "chm_resolution",
+                                              label = "Resolution ( q ) in meters",
+                                              min = 0.1,
+                                              max = 1,
+                                              value = 0.5
+                                          )
+                             ),
+                         mainPanel(
+                             h2(textOutput('number_of_tree_2')),
+                            rglwidgetOutput('radius_plot',height = "700px",width = "700px"),
+                              h2(textOutput('min_distance_between_trees')),
+                             plotOutput(outputId = "treeXYLocation"),
+                            dataTableOutput("radius_table")
+                         )
+                 
+                )
 )
                  
 
@@ -174,7 +208,7 @@ server <- function(input, output) {
     })
     
     
-    output$filtered_with_ground <- renderRglwidget({
+    output$filtered_with_ground <- renderPlaywidget({
         rgl.open(useNULL = T)
 
         small_dat <- smallData()
@@ -190,7 +224,7 @@ server <- function(input, output) {
         plot(dtm())
     })
     
-    output$flatterned <- renderRglwidget({
+    output$flatterned <- renderPlaywidget({
         rgl.open(useNULL = T)
         dat <- flatten_data()
         points3d(x = dat@data$X, y = dat@data$Y, z = dat@data$Z)
@@ -213,7 +247,7 @@ server <- function(input, output) {
         plot(dat , col=col)
     })
     
-    output$canopy_height_model_3D <- renderRglwidget({
+    output$canopy_height_model_3D <- renderPlaywidget({
         rgl.open(useNULL = T)
         dat <- chm()
        
@@ -238,10 +272,84 @@ server <- function(input, output) {
         
         rglwidget()
     })
+    ######################################################
+    ## START SECTION 3 Tree Trunk
+    ######################################################
     
+    treeMap1 <- reactive({
+        #  ## sample points systematically in 3D
+        # extract the tree map from a thinned point cloud
+        # spacing numeric - voxel side length.
+        thin = tlsSample(flatten_data(), voxelize(0.05))         
+        
+        # lower min_density -> more tree estimate
+        #between 0 and 1 - minimum point density within a pixel evaluated on
+        #the Hough Transform - i.e. only dense point clousters will undergo circle search.
+        map1 = treeMap(thin, map.hough(min_density = 0.00000000000001))
+        return(list(thin , map1))
+    })
     
+    radiusDf <- reactive({
+      df <- treeMap1()
+      thin <- df[[1]]
+      map1 <- df[[2]]
+      small_dat_normal = stemPoints(thin, map1)
+      result_df <- small_dat_normal@data %>% group_by(TreeID) %>% filter(TreeID > 0) %>% summarise(radius_estimate = max(Radius))
+      
+      return(result_df)
+    })
     
+   
     
+    output$treeXYLocation <- renderPlot({
+      
+        map1 <- treeMap1()[[2]]
+        output$number_of_tree_2 <- renderText({
+            paste("Number of trees : " , length(unique(map1@data$TreeID)) )
+        })
+        
+        
+        # visualize tree map in 2D and 3D
+        xymap = treePositions(map1 , plot =TRUE)
+        
+        output$min_distance_between_trees <- renderText({
+        
+          
+          min_distances = c()
+          count2 = 1
+          for(i in seq(1,nrow(xymap))) {
+            min_distance = c()
+            p1 = xymap[i]
+            count = 1
+            for(j in seq(1,nrow(xymap))){
+              
+              if(i != j){
+                p2 = xymap[j]
+                min_distance[count] = distance(p1 , p2)
+                count = count + 1
+              }
+            }
+            min_distances[count2] <- min(min_distance)
+            
+            count2 = count2 + 1
+          }
+          
+          paste("Min distance between trees : " , min(min_distances) )
+          paste("Mean distance between trees : " , mean(min_distances) )
+        })
+        
+        
+    })
+    
+    output$radius_plot <- renderRglwidget({
+        rgl.open(useNULL = T)
+        plot(treeMap1()[[2]])
+        rglwidget()
+    })
+    
+    output$radius_table <- renderDataTable({
+      radiusDf()
+    })
  
 }
 
