@@ -1,7 +1,6 @@
 import numpy as np
 from typing import List, Tuple
 MAX_OBSERVABLE_DISTANCE = 10
-distance: int = MAX_OBSERVABLE_DISTANCE
 
 
 class Blob:
@@ -14,7 +13,7 @@ class Blob:
         self._observable_distance = MAX_OBSERVABLE_DISTANCE
 
     def __str__(self):
-        return f"{self.x}, {self.y}"
+        return f"<Blob x:{self.x}, y:{self.y}>"
 
     def __sub__(self, other):
         return (self.x-other.x, self.y-other.y)

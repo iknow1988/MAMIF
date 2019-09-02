@@ -8,10 +8,12 @@ import cv2
 import matplotlib.pyplot as plt
 import time
 
-HM_EPISODES = 2000
+HM_EPISODES = 1000
+
 MOVE_PENALTY = 1
 ENEMY_PENALTY = 300
 FOOD_REWARD = 25
+
 epsilon = 0.9
 EPS_DECAY = 0.9998  # Every episode will be epsilon*EPS_DECAY
 SHOW_EVERY = 300  # how often to play through env visually.
@@ -50,6 +52,7 @@ def Qlearning(problem: Problem, q_table: dict, epsilon: float = epsilon, blob_ra
                 [euclidean_distance((player.x, player.y), p) for p in boundary_list])
 
             enemy_position = boundary_list[min_index_enemy]
+
             enemy = Blob(enemy_position[0], enemy_position[1])
 
             min_index_food = np.argmin(
@@ -120,12 +123,13 @@ def Qlearning(problem: Problem, q_table: dict, epsilon: float = epsilon, blob_ra
                 cv2.imshow("image", np.array(img))  # show it!
                 # time.sleep(0.05)
                 # crummy code to hang at the end if we reach abrupt end for good reasons or not.
-                if reward == FOOD_REWARD or reward == -ENEMY_PENALTY:
-                    if cv2.waitKey(500) & 0xFF == ord('q'):
-                        break
-                else:
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+                # if reward == FOOD_REWARD or reward == -ENEMY_PENALTY:
+                #     if cv2.waitKey(500) & 0xFF == ord('q'):
+                #         break
+                # else:
+                #     if cv2.waitKey(1) & 0xFF == ord('q'):
+                #         break
+                cv2.waitKey(1)
 
             episode_reward += reward
             if reward == FOOD_REWARD or reward == -ENEMY_PENALTY:
