@@ -1,12 +1,7 @@
-# Self Driving Car
-
-# Importing the libraries
 import numpy as np
 from random import random, randint
 import matplotlib.pyplot as plt
 import time
-
-# Importing the Kivy packages
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
@@ -15,8 +10,6 @@ from kivy.config import Config
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty
 from kivy.vector import Vector
 from kivy.clock import Clock
-
-# Importing the Dqn object from our AI in ai.py
 from ai import Dqn
 
 # Adding this line if we don't want the right click to put a red point
@@ -36,6 +29,11 @@ scores = []
 
 # Initializing the map
 first_update = True
+
+# Initializing the last distance
+last_distance = 0
+
+
 def init():
     global sand
     global goal_x
@@ -46,10 +44,6 @@ def init():
     goal_y = largeur - 20
     first_update = False
 
-# Initializing the last distance
-last_distance = 0
-
-# Creating the car class
 
 class Car(Widget):
     
@@ -89,14 +83,18 @@ class Car(Widget):
         if self.sensor3_x>longueur-10 or self.sensor3_x<10 or self.sensor3_y>largeur-10 or self.sensor3_y<10:
             self.signal3 = 1.
 
+
 class Ball1(Widget):
     pass
+
+
 class Ball2(Widget):
     pass
+
+
 class Ball3(Widget):
     pass
 
-# Creating the game class
 
 class Game(Widget):
 
@@ -165,7 +163,6 @@ class Game(Widget):
             goal_y = self.height-goal_y
         last_distance = distance
 
-# Adding the painting tools
 
 class MyPaintWidget(Widget):
 
@@ -195,7 +192,6 @@ class MyPaintWidget(Widget):
             last_x = x
             last_y = y
 
-# Adding the API Buttons (clear, save and load)
 
 class CarApp(App):
 
@@ -231,6 +227,6 @@ class CarApp(App):
         print("loading last saved brain...")
         brain.load()
 
-# Running the whole thing
+
 if __name__ == '__main__':
     CarApp().run()
