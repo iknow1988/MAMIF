@@ -28,8 +28,9 @@ length = 0
 speed = 3
 gamma = 0.8
 # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
-brain = Dqn(5, 61, gamma)
-action2rotation = [i for i in range(-30, 31 ,1)]
+brain = Dqn(5, 3, gamma)
+action2rotation = [0,20,-20]
+#action2rotation = [i for i in range(-30, 31 ,1)]
 
 last_reward = 0
 scores = []
@@ -230,10 +231,10 @@ class CarApp(App):
     def load(self, obj):
         global sand
         self.painter.canvas.add(Color(0.8,0.7,0))
-        for _ in range(100):
+        for _ in range(20):
             pos_x = random.randint(1, longueur)
             pos_y = random.randint(1, largeur)
-            width = random.randint(15, 30)
+            width = random.randint(10, 30)
             elipse = Ellipse(pos=(pos_x, pos_y), size=(width, width))
             sand[int(pos_x) - width: int(pos_x) + width, int(pos_y) - width: int(pos_y) + width] = 1
             self.painter.canvas.add(elipse)
@@ -248,6 +249,8 @@ def save_data():
         df = {'experiment': experiment, 'time': i, 'speed': row[0], 'gamma': gamma, 'signal1': row[1], 'signal2': row[2],
               'signal3': row[3], 'distance_to_goal': row[4], 'action': row[5], 'orientation': row[6], 'reward': row[7]}
         data = data.append(df, ignore_index=True)
+        if i % 1000 == 0:
+            print("left to save =>", len(sample) - i)
     data.to_csv('data.csv', index = False)
 
     print("saving brain...")
