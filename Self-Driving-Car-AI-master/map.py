@@ -28,9 +28,9 @@ length = 0
 speed = 3
 gamma = 0.8
 # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
-brain = Dqn(5, 3, gamma)
-action2rotation = [0,20,-20]
-#action2rotation = [i for i in range(-30, 31 ,1)]
+brain = Dqn(5, 41, gamma)
+#action2rotation = [0,20,-20]
+action2rotation = [i for i in range(-20, 21 ,1)]
 
 last_reward = 0
 scores = []
@@ -58,10 +58,12 @@ def init():
     global goal_x
     global goal_y
     global first_update
+    global goals_y
     sand = np.zeros((longueur,largeur))
     # sand = np.load('sand.npy')
-    goal_x = 20
-    goal_y = largeur - 20
+    goal_x = 10
+    goal_y = largeur - 10
+    goals_y = [i for i in range(largeur - 10)]
     first_update = False
 
 
@@ -102,6 +104,8 @@ class Car(Widget):
         if self.sensor3_x>longueur-10 or self.sensor3_x<10 or self.sensor3_y>largeur-10 or self.sensor3_y<10:
             self.signal3 = 1.
 
+class Goal(Widget):
+    pass
 
 class Ball1(Widget):
     pass
@@ -121,6 +125,7 @@ class Game(Widget):
     ball1 = ObjectProperty(None)
     ball2 = ObjectProperty(None)
     ball3 = ObjectProperty(None)
+    goal = ObjectProperty(None)
 
     def serve_car(self):
         self.car.center = self.center
@@ -135,6 +140,7 @@ class Game(Widget):
         global last_distance
         global goal_x
         global goal_y
+        global goals_y
         global longueur
         global largeur
 
@@ -142,7 +148,7 @@ class Game(Widget):
         largeur = self.height
         if first_update:
             init()
-
+        goal_y = min(goals_y, key=lambda x: np.sqrt((self.car.x - goal_x)**2 + (self.car.y - x)**2))
         xx = goal_x - self.car.x
         yy = goal_y - self.car.y
         orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
@@ -156,6 +162,7 @@ class Game(Widget):
         self.ball1.pos = self.car.sensor1
         self.ball2.pos = self.car.sensor2
         self.ball3.pos = self.car.sensor3
+        self.goal.pos = (goal_x, goal_y)
 
         if sand[int(self.car.x),int(self.car.y)] > 0:
             self.car.velocity = Vector(1, 0).rotate(self.car.angle)
@@ -182,8 +189,10 @@ class Game(Widget):
         if distance < 30:
             goal_x = self.width-goal_x
             goal_y = self.height-goal_y
+            last_reward = 1
         last_distance = distance
         sample.append([speed, self.car.signal1, self.car.signal2, self.car.signal3, last_distance, rotation, orientation, last_reward])
+        # print("Goal", goal_x, goal_y, rotation)
 
 
 class MyPaintWidget(Widget):
@@ -222,7 +231,7 @@ class CarApp(App):
         parent.serve_car()
         Clock.schedule_interval(parent.update, 1.0/60.0)
         self.painter = MyPaintWidget()
-        loadbtn = Button(text='Load')
+        loadbtn = Button(text='Load', size=(40,40))
         loadbtn.bind(on_release = self.load)
         parent.add_widget(self.painter)
         parent.add_widget(loadbtn)
@@ -231,7 +240,7 @@ class CarApp(App):
     def load(self, obj):
         global sand
         self.painter.canvas.add(Color(0.8,0.7,0))
-        for _ in range(20):
+        for _ in range(100):
             pos_x = random.randint(1, longueur)
             pos_y = random.randint(1, largeur)
             width = random.randint(10, 30)
@@ -244,14 +253,14 @@ class CarApp(App):
 
 
 def save_data():
-    global data
-    for i, row in enumerate(sample):
-        df = {'experiment': experiment, 'time': i, 'speed': row[0], 'gamma': gamma, 'signal1': row[1], 'signal2': row[2],
-              'signal3': row[3], 'distance_to_goal': row[4], 'action': row[5], 'orientation': row[6], 'reward': row[7]}
-        data = data.append(df, ignore_index=True)
-        if i % 1000 == 0:
-            print("left to save =>", len(sample) - i)
-    data.to_csv('data.csv', index = False)
+    # global data
+    # for i, row in enumerate(sample):
+    #     df = {'experiment': experiment, 'time': i, 'speed': row[0], 'gamma': gamma, 'signal1': row[1], 'signal2': row[2],
+    #           'signal3': row[3], 'distance_to_goal': row[4], 'action': row[5], 'orientation': row[6], 'reward': row[7]}
+    #     data = data.append(df, ignore_index=True)
+    #     if i % 1000 == 0:
+    #         print("left to save =>", len(sample) - i)
+    # data.to_csv('data.csv', index = False)
 
     print("saving brain...")
     brain.save()
