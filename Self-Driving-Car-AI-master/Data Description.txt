@@ -1,0 +1,12 @@
+experiment => experiment_no
+time => time id for experiment
+speed => speed of the object
+gamma => Learning rate
+signal1 => ratio of obstacle in 20X20 grid for left sensor. It is sum of 1's in 20X20 grid / 400
+signal2 => ratio of obstacle in 20X20 grid for front sensor. It is sum of 1's in 20X20 grid / 400
+signal3 => ratio of obstacle in 20X20 grid for right sensor. It is sum of 1's in 20X20 grid / 400
+distance_to_goal => distance from current position to the goal
+action => turning angle from -30 to 30 degree
+orientation => Facing of the object
+reward => reward given for that action
+

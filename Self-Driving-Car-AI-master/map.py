@@ -221,30 +221,11 @@ class CarApp(App):
         parent.serve_car()
         Clock.schedule_interval(parent.update, 1.0/60.0)
         self.painter = MyPaintWidget()
-        # clearbtn = Button(text = 'clear')
-        # savebtn = Button(text = 'save', pos = (parent.width, 0))
-        # loadbtn = Button(text = 'load', pos = (2 * parent.width, 0))
         loadbtn = Button(text='Load')
-        # clearbtn.bind(on_release = self.clear_canvas)
-        # savebtn.bind(on_release = self.save)
         loadbtn.bind(on_release = self.load)
         parent.add_widget(self.painter)
-        # parent.add_widget(clearbtn)
-        # parent.add_widget(savebtn)
         parent.add_widget(loadbtn)
         return parent
-
-    def clear_canvas(self, obj):
-        global sand
-        self.painter.canvas.clear()
-        sand = np.zeros((longueur,largeur))
-
-    def save(self, obj):
-        print("saving brain...")
-        brain.save()
-        # plt.plot(scores)
-        plt.hist(bird_actions, bins = 61)
-        plt.show()
 
     def load(self, obj):
         global sand
@@ -262,12 +243,12 @@ class CarApp(App):
 
 
 def save_data():
-    global  data
+    global data
     for i, row in enumerate(sample):
         df = {'experiment': experiment, 'time': i, 'speed': row[0], 'gamma': gamma, 'signal1': row[1], 'signal2': row[2],
               'signal3': row[3], 'distance_to_goal': row[4], 'action': row[5], 'orientation': row[6], 'reward': row[7]}
         data = data.append(df, ignore_index=True)
-    data.to_csv('data.csv')
+    data.to_csv('data.csv', index = False)
 
     print("saving brain...")
     brain.save()
