@@ -64,10 +64,10 @@ class Dqn():
         next_outputs = self.model(batch_next_state).detach().max(1)[0]
         target = self.gamma*next_outputs + batch_reward
         td_loss = F.smooth_l1_loss(outputs, target)
-        self.optimizer.zero_grad()
-        td_loss.backward()
-        #td_loss.backward(retain_variables = True)
+        # td_loss.backward()
+        td_loss.backward(retain_graph = True)
         self.optimizer.step()
+        self.optimizer.zero_grad()
     
     def update(self, reward, new_signal):
         new_state = torch.Tensor(new_signal).float().unsqueeze(0)
