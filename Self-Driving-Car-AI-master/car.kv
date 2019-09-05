@@ -1,5 +1,5 @@
 <Car>:
-    size: 20, 10
+    size: 10, 5
     canvas:
         PushMatrix
         Rotate:
@@ -11,7 +11,7 @@
         PopMatrix
 
 <Ball1>:
-    size: 10,10
+    size: 5,5
     canvas:
         Color:
             rgba: 1,0,0,1
@@ -19,7 +19,7 @@
             pos: self.pos
             size: self.size
 <Ball2>:
-    size: 10,10
+    size: 5,5
     canvas:
         Color:
             rgba: 0,1,1,1
@@ -28,7 +28,7 @@
             size: self.size
 
 <Ball3>:
-    size: 10,10
+    size: 5,5
     canvas:
         Color:
             rgba: 1,1,0,1
@@ -37,10 +37,10 @@
             size: self.size
 
 <Goal>:
-    size: 20,20
+    size: 5,5
     canvas:
         Color:
-            rgba: 1,0,0,1
+            rgba: 0,255,0,1
         Ellipse:
             pos: self.pos
             size: self.size
