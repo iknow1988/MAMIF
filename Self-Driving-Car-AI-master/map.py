@@ -26,8 +26,8 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
-speed = 5
-gamma = 0.9
+speed = 1
+gamma = 0.8
 # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
 brain = Dqn(5, 41, gamma)
 print("loading last saved brain...")
@@ -53,7 +53,8 @@ else:
               'signal3', 'distance_to_goal', 'action', 'orientation', 'reward']
    data = pd.DataFrame(columns=columns)
 
-# sample = []
+sample = []
+time = 0
 
 
 def init():
@@ -143,6 +144,7 @@ class Game(Widget):
         global goals_y
         global longueur
         global largeur
+        global time
 
         longueur = self.width
         largeur = self.height
@@ -192,7 +194,11 @@ class Game(Widget):
             last_reward = 2
 
         last_distance = distance
-        # sample.append([speed, self.car.signal1, self.car.signal2, self.car.signal3, last_distance, rotation, orientation, last_reward])
+        sample.append({'experiment': experiment, 'time': time, 'speed': speed, 'gamma': gamma,
+                       'signal1': self.car.signal1, 'signal2': self.car.signal2, 'signal3': self.car.signal3,
+                       'distance_to_goal': last_distance, 'action': rotation, 'orientation': orientation,
+                       'reward': last_reward})
+        time = time + 1
 
 
 
@@ -207,7 +213,7 @@ class ObstacleWidget(Widget):
 
     def load(self):
         rectangles = []
-        for _ in range(100):
+        for _ in range(250):
             pos_x = random.randint(40, self.width - 40)
             pos_y = random.randint(40, self.height - 40)
             width = random.randint(10, 40)
@@ -243,8 +249,12 @@ class CarApp(App):
 
 
 def save_data():
+    global data
     print("saving brain...")
     brain.save()
+    print("saving data...")
+    data = pd.concat([data, pd.DataFrame(sample)])
+    data.to_csv('data.csv', index=False)
 
 
 if __name__ == '__main__':
