@@ -16,8 +16,9 @@ class Network(nn.Module):
         self.nb_action = nb_action
         # 2 layers fully connected network .
         # both layers are of size 30.
-        self.fc1 = nn.Linear(input_size, 30)
-        self.fc2 = nn.Linear(30, nb_action)
+        hidden_layer_size = input_size * 2
+        self.fc1 = nn.Linear(input_size, hidden_layer_size)
+        self.fc2 = nn.Linear(hidden_layer_size, nb_action)
 
     def forward(self, state):
         # Map state to q-value
@@ -116,8 +117,8 @@ class Dqn():
         if len(self.memory.memory) > 100:
             batch_state, batch_next_state, batch_action, batch_reward = self.memory.sample(
                 100)
-            self.learn(batch_state, batch_next_state,
-                       batch_reward, batch_action)
+            self._learn(batch_state, batch_next_state,
+                        batch_reward, batch_action)
         self.last_action = action
         self.last_state = new_state
         self.last_reward = reward
