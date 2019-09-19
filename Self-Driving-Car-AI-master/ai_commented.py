@@ -8,6 +8,10 @@ from torch.autograd import Variable
 from typing import List, Tuple
 
 
+BATCH_SIZE = 100
+BRIAN_OUTPUT_FILE = 'tmp2_brain.pth'
+
+
 class Network(nn.Module):
 
     def __init__(self, input_size: int, nb_action: int):
@@ -42,6 +46,8 @@ class ReplayMemory():
         event :  (self.last_state, new_state, 
                   torch.LongTensor([int(self.last_action)]), 
                   torch.Tensor([self.last_reward]))
+
+                Note:
                   torch.LongTensor : dtype = int64
                   torch.Tensor : dtype = float32
         """
@@ -90,9 +96,30 @@ class Dqn():
     def _learn(self, batch_state, batch_next_state, batch_reward, batch_action):
         outputs = self.model(batch_state).gather(
             1, batch_action.unsqueeze(1)).squeeze(1)
+
+        # print("In learn")
+        # print('batch_state')
+        # print(batch_state.shape)
+        # print(batch_state)
+        # print('batch action ')
+        # print(batch_action.shape)
+        # print(batch_action)
+        # print('batch_next_state')
+        # print(batch_next_state.shape)
+        # print(batch_next_state)
+        # print('batch reward')
+        # print(batch_reward.shape)
+        # print(batch_reward)
+
+        # print('Outputs')
+        # print(outputs.shape)
+        # print(outputs)
         next_outputs = self.model(batch_next_state).detach().max(1)[0]
+
         target = self.gamma*next_outputs + batch_reward
+
         td_loss = F.smooth_l1_loss(outputs, target)
+
         # td_loss.backward()
         td_loss.backward(retain_graph=True)
         self.optimizer.step()
@@ -101,12 +128,14 @@ class Dqn():
     def update(self, reward, new_signal: List):
         """
 
-        new_signal :  [car.signal1, car.signal2,
+        new_signal : List of features from the current state.
+                    [car.signal1, car.signal2,
                        car.signal3, orientation, -orientation]
                        signal : int or float
                        orientation : float
         """
         # 1D tensor as the new_signel is always a list input.
+        # Compress all features into an 1D tensor
         new_state = torch.Tensor(new_signal).unsqueeze(0)
 
         self.memory.push((self.last_state, new_state, torch.LongTensor(
@@ -116,7 +145,8 @@ class Dqn():
 
         if len(self.memory.memory) > 100:
             batch_state, batch_next_state, batch_action, batch_reward = self.memory.sample(
-                100)
+                BATCH_SIZE)
+
             self._learn(batch_state, batch_next_state,
                         batch_reward, batch_action)
         self.last_action = action
@@ -133,12 +163,12 @@ class Dqn():
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
-                    }, 'last_brain.pth')
+                    }, BRIAN_OUTPUT_FILE)
 
     def load(self):
-        if os.path.isfile('last_brain.pth'):
+        if os.path.isfile(BRIAN_OUTPUT_FILE):
             print("=> loading checkpoint... ")
-            checkpoint = torch.load('last_brain.pth')
+            checkpoint = torch.load(BRIAN_OUTPUT_FILE)
             self.model.load_state_dict(checkpoint['state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             print("done !")
