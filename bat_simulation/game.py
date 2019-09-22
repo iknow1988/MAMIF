@@ -174,12 +174,16 @@ class Game(Widget):
     goal = ObjectProperty(None)
 
     def __init__(self, **kwargs):
+
         super(Game, self).__init__()
         self.height = 500
         self.width = 500
         self.action2rotation = [i for i in range(-20, 21, 1)]
-        self.brain = Dqn(5, 41, GAMMA)
+
         self.state = State()
+        self.state.brain = Dqn(5, 41, GAMMA)
+        self.state.experiment = 1
+        print("EXP : {}".format(self.state.experiment))
         # self.bat = ObjectProperty(None)
         # self.goal = ObjectProperty(None)
 
@@ -197,7 +201,6 @@ class Game(Widget):
         self.state.last_distance = 0
         self.state.first_update = False
         self.state.sample = []
-        self.state.experiment = 1
         self.state.time = 1
 
     def update(self, obstacles: ObstacleWidget, dt):
@@ -215,9 +218,9 @@ class Game(Widget):
             obstacles.set_size(self.state.longueur + 1, self.state.largeur + 1)
             obstacles.load()
             self.state.sand = obstacles.get_sand()
-            print("Sum")
-            print(np.sum(self.state.sand))
-            print(self.state.sand.shape)
+            # print("Sum")
+            # print(np.sum(self.state.sand))
+            # print(self.state.sand.shape)
 
         # goal_y = min(goals_y, key=lambda x: np.sqrt(
         #     (self.bat.x - goal_x)**2 + (self.bat.y - x)**2))
@@ -231,7 +234,7 @@ class Game(Widget):
         last_signal = [self.bat.signal1, self.bat.signal2,
                        self.bat.signal3, orientation, -orientation]
 
-        action = self.brain.update(self.state.last_reward, last_signal)
+        action = self.state.brain.update(self.state.last_reward, last_signal)
         rotation = self.action2rotation[action]
         self.bat.move(rotation, self.state)
         distance = np.sqrt((self.bat.x - self.state.goal_x) **
@@ -276,7 +279,9 @@ class Game(Widget):
             last_reward = REWARD_GOAL
 
         last_distance = distance
-        self.state.sample.append({'experiment': self.state.experiment, 'time': self.state.time, 'BAT_SPEED': BAT_SPEED, 'gamma': GAMMA,
+        self.state.last_reward = last_reward
+        self.state.last_distance = last_distance
+        self.state.sample.append({'experiment': self.state.experiment, 'time': self.state.time, 'speed': BAT_SPEED, 'gamma': GAMMA,
                                   'signal1': self.bat.signal1, 'signal2': self.bat.signal2, 'signal3': self.bat.signal3,
                                   'distance_to_goal': last_distance, 'action': rotation, 'orientation': orientation,
                                   'reward': last_reward})

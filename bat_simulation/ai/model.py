@@ -7,6 +7,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
+from constants import MODEL_FILE
+
 
 class Network(nn.Module):
 
@@ -111,12 +113,12 @@ class Dqn():
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
-                    }, 'last_brain.pth')
+                    }, MODEL_FILE)
 
     def load(self):
-        if os.path.isfile('last_brain.pth'):
+        if os.path.isfile(MODEL_FILE):
             print("=> loading checkpoint... ")
-            checkpoint = torch.load('last_brain.pth')
+            checkpoint = torch.load(MODEL_FILE)
             self.model.load_state_dict(checkpoint['state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             print("done !")

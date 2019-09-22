@@ -8,3 +8,6 @@ REWARD_BETTER_DISTANCE = 0.4
 REWARD_ON_EDGE = -1
 REWARD_GOAL = 10
 GAMMA = 0.8
+
+OUTPUT_FILE = 'tmp.csv'
+MODEL_FILE = 'last_brain.pth'
