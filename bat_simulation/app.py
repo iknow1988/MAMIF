@@ -1,31 +1,18 @@
 import atexit
 import os.path as path
+import random
 from functools import partial
 
 import pandas as pd
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.core.window import Window
 
 from constants import OUTPUT_FILE
 from game import Game, ObstacleWidget
 
-# if path.exists(OUTPUT_FILE):
-#     data = pd.read_csv(OUTPUT_FILE)
-#     experiment = data['experiment'].max() + 1
-# else:
-#     columns = ['experiment', 'time', 'speed', 'gamma', 'signal1', 'signal2',
-#                'signal3', 'distance_to_goal', 'action', 'orientation', 'reward']
-#     data = pd.DataFrame(columns=columns)
-
-
-# # def save_data(data=data):
-
-#     print("saving brain...")
-#     parent.state.brain.save()
-#     print("saving data...")
-#     data = pd.concat([data, pd.DataFrame(parent.state.sample)])
-#     data.to_csv(OUTPUT_FILE, index=False)
-# #     print(parent.state.time)
+random.seed(9001)
+Window.size = (500, 500)
 
 
 class BatApp(App):
@@ -44,7 +31,7 @@ class BatApp(App):
         self.parent.serve_bat()
         self.obstacles = ObstacleWidget(100, 50)
         Clock.schedule_interval(
-            partial(self.parent.update, self.obstacles), 1.0/60.0)
+            partial(self.parent.update, self.obstacles), 1.0/120.0)
         self.parent.add_widget(self.obstacles)
         return self.parent
 
