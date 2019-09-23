@@ -16,8 +16,8 @@ class Network(nn.Module):
         super(Network, self).__init__()
         self.input_size = input_size
         self.nb_action = nb_action
-        self.fc1 = nn.Linear(input_size, 128)
-        self.fc2 = nn.Linear(128, nb_action)
+        self.fc1 = nn.Linear(input_size, 30)
+        self.fc2 = nn.Linear(30, nb_action)
 
     def forward(self, state):
         x = F.relu(self.fc1(state))
@@ -56,6 +56,8 @@ class Dqn():
         self.last_state = torch.Tensor(input_size).unsqueeze(0)
         self.last_action = 0
         self.last_reward = 0
+        self._batch_size = 300
+        self._epsilon = 0.1
 
     def select_action(self, state):
 
@@ -68,13 +70,15 @@ class Dqn():
         # print(V.requires_grad)
         q_vals = self.model.forward(state)
 
-        probs = F.softmax(q_vals*100, dim=1)
+        probs = F.softmax(q_vals, dim=1)
 
         # probs = F.softmax(self.model(Variable(state))*100, dim=1)
         # action = probs.multinomial(1)
         action = probs.max(1)[1].view(1, 1)
         # a is scalar tensor.
         a = action.data[0, 0]
+        if random.random() < self._epsilon:
+            return random.randrange(0, self.model.nb_action)
         return a
 
     def learn(self, batch_state, batch_next_state, batch_reward, batch_action):
@@ -94,16 +98,16 @@ class Dqn():
         self.memory.push((self.last_state, new_state, torch.LongTensor(
             [int(self.last_action)]), torch.Tensor([self.last_reward])))
         action = self.select_action(new_state)
-        if len(self.memory.memory) > 100:
+        if len(self.memory.memory) > self._batch_size:
             batch_state, batch_next_state, batch_action, batch_reward = self.memory.sample(
-                100)
+                self._batch_size)
             self.learn(batch_state, batch_next_state,
                        batch_reward, batch_action)
         self.last_action = action
         self.last_state = new_state
         self.last_reward = reward
         self.reward_window.append(reward)
-        if len(self.reward_window) > 1000:
+        if len(self.reward_window) > self._batch_size * 10:
             del self.reward_window[0]
         return action
 

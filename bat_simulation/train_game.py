@@ -158,8 +158,8 @@ class Game:
 
     def __init__(self, model, experiment_number):
 
-        self.height = 500
-        self.width = 500
+        self.height = 800
+        self.width = 800
         self.action2rotation = [i for i in range(-20, 21, 1)]
 
         self.state = State()

@@ -7,13 +7,13 @@ import pandas as pd
 from ai.model import Dqn
 from train_game import Game
 
-random.seed(9001)
+random.seed(9041)
 
 MODLE_FILE = 'tmp_brain.pth'
 OUTPUT_CSV = 'tmp.csv'
 GAMMA = 0.8
-N_EPISODE = 15
-N_MOVES = 2000
+N_EPISODE = 20
+N_MOVES = 3000
 
 # class Trainer:
 #     def __init__(self,  bat_config: dict):
