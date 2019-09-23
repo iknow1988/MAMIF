@@ -110,15 +110,15 @@ class Dqn():
     def score(self):
         return sum(self.reward_window)/(len(self.reward_window)+1.)
 
-    def save(self):
+    def save(self, model_file=MODEL_FILE):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
-                    }, MODEL_FILE)
+                    }, model_file)
 
-    def load(self):
-        if os.path.isfile(MODEL_FILE):
+    def load(self, model_file=MODEL_FILE):
+        if os.path.isfile(model_file):
             print("=> loading checkpoint... ")
-            checkpoint = torch.load(MODEL_FILE)
+            checkpoint = torch.load(model_file)
             self.model.load_state_dict(checkpoint['state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             print("done !")
