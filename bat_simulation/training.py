@@ -5,14 +5,15 @@ import random
 import pandas as pd
 
 from ai.model import Dqn
-from train_game import Game
+from constants import GAMMA
+from traing_game_v2 import Game
 
-random.seed(9041)
+random.seed(66)
 
 MODLE_FILE = 'tmp_brain.pth'
 OUTPUT_CSV = 'tmp.csv'
-GAMMA = 0.8
-N_EPISODE = 20
+
+N_EPISODE = 30
 N_MOVES = 3000
 
 # class Trainer:
@@ -78,6 +79,7 @@ if __name__ == '__main__':
         game = Game(brain, experiment_number)
 
         for j in range(N_MOVES):
+            # Each update called would result an addtional one row of data store in game.state.sample
             game.update()
 
         print("Save data")
