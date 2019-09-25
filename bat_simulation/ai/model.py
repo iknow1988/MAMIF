@@ -100,7 +100,7 @@ class Dqn():
         self.last_action = 0
         self.last_reward = 0
         self.epsilon = 0.05
-        self.target_update = 100
+        self.target_update = 200
         self.n_update = 0
 
     def _select_action(self, state: torch.Tensor):
@@ -176,7 +176,7 @@ class Dqn():
         self.memory.push(event)
 
         action = self._select_action(new_state)
-
+        loss = None
         if len(self.memory.memory) > BATCH_SIZE:
             # batch_state, batch_next_state, batch_action, batch_reward = self.memory.sample(
             #     BATCH_SIZE)
@@ -260,7 +260,10 @@ class Dqn():
             # print("Update target")
             self.target_net.load_state_dict(self.online_net.state_dict())
         # print(action)
-        return action
+        if loss is not None:
+            # print(loss.item())
+            return action, loss.item()
+        return action, loss
 
     def score(self):
         return sum(self.reward_window)/(len(self.reward_window)+1.)
@@ -269,6 +272,7 @@ class Dqn():
         torch.save({'state_dict': self.online_net.state_dict(),
                     'target_net_dict': self.target_net.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
+                    'memory': self.memory
                     }, model_file)
 
     def load(self, model_file=MODEL_FILE):
@@ -278,6 +282,7 @@ class Dqn():
             self.online_net.load_state_dict(checkpoint['state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             self.target_net.load_state_dict(checkpoint['target_net_dict'])
+            self.memory = checkpoint['memory']
             print("done !")
         else:
             print("no checkpoint found...")

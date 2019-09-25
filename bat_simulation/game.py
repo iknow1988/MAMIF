@@ -234,10 +234,71 @@ class Game(Widget):
         self.state.sample = []
         self.state.time = 1
 
+    def _bat_on_edge(self) -> bool:
+        on_edge = False
+        if self.bat.x < 10:
+            self.bat.x = 10
+            on_edge = True
+        if self.bat.x > self.width - 10:
+            self.bat.x = self.width - 10
+            on_edge = True
+        if self.bat.y < 10:
+            self.bat.y = 10
+            on_edge = True
+        if self.bat.y > self.height - 10:
+            self.bat.y = self.height - 10
+            on_edge = True
+        return on_edge
+
+    def _compute_reward(self):
+        #################
+        # Compute reward
+        distance = np.sqrt((self.bat.x - self.state.goal_x) **
+                           2 + (self.bat.y - self.state.goal_y) ** 2)
+
+        # (To discourage traversing outside of forest )
+        if self._bat_on_edge():
+            # print("Adjust ")
+            last_reward = REWARD_ON_EDGE
+
+        if self.state.sand[int(self.bat.x), int(self.bat.y)] > 0:
+            self.bat.velocity = Vector(0.2, 0).rotate(self.bat.angle)
+            self.canvas.add(Color(255, 0, 0))
+            self.canvas.add(Ellipse(pos=(self.bat.x, self.bat.y), size=(2, 2)))
+            last_reward = REWARD_HIT_TREE
+        else:  # otherwise
+            self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
+            last_reward = REWARD_MOVE
+            if distance < self.state.last_distance:
+                last_reward = REWARD_BETTER_DISTANCE
+
+        # (To discourage traversing outside of forest )
+        # if self.bat.x < 10:
+        #     self.bat.x = 10
+        #     last_reward = REWARD_ON_EDGE
+        # if self.bat.x > self.width - 10:
+        #     self.bat.x = self.width - 10
+        #     last_reward = REWARD_ON_EDGE
+        # if self.bat.y < 10:
+        #     self.bat.y = 10
+        #     last_reward = REWARD_ON_EDGE
+        # if self.bat.y > self.height - 10:
+        #     self.bat.y = self.height - 10
+        #     last_reward = REWARD_ON_EDGE
+
+        if distance < 20:
+            self.state.goal_x = self.width - self.state.goal_x
+            self.state.goal_y = np.random.randint(0, self.height)
+            last_reward = REWARD_GOAL
+
+        self.state.last_reward = last_reward
+        self.state.last_distance = distance
+
     def update(self, obstacles: ObstacleWidget, dt):
 
         # print("In update {}".format(type(self.bat.signal1)))
-
+        # distance = np.sqrt((self.bat.x - self.state.goal_x) **
+        #                    2 + (self.bat.y - self.state.goal_y) ** 2)
         self.state.longueur = self.width
         self.state.largeur = self.height
         # longueur = 500
@@ -265,12 +326,12 @@ class Game(Widget):
         last_signal = [self.bat.signal1, self.bat.signal2,
                        self.bat.signal3, orientation, -orientation]
 
-        action = self.state.brain.update(self.state.last_reward, last_signal)
+        action, loss = self.state.brain.update(
+            self.state.last_reward, last_signal)
         rotation = self.action2rotation[action]
 
         self.bat.move(rotation, self.state)
-        distance = np.sqrt((self.bat.x - self.state.goal_x) **
-                           2 + (self.bat.y - self.state.goal_y) ** 2)
+
         self.goal.pos = (self.state.goal_x, self.state.goal_y)
 
         if PRINT_PATH:
@@ -280,42 +341,11 @@ class Game(Widget):
 
         # print("X : {} , Y : {}".format(self.bat.x, self.bat.y))
         # print(self.state.sand.shape)
+        self._compute_reward()
 
-        if self.state.sand[int(self.bat.x), int(self.bat.y)] > 0:
-            self.bat.velocity = Vector(0.2, 0).rotate(self.bat.angle)
-            self.canvas.add(Color(255, 0, 0))
-            self.canvas.add(Ellipse(pos=(self.bat.x, self.bat.y), size=(2, 2)))
-            last_reward = REWARD_HIT_TREE
-        else:  # otherwise
-            self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
-            last_reward = REWARD_MOVE
-            if distance < self.state.last_distance:
-                last_reward = REWARD_BETTER_DISTANCE
-        # (To discourage traversing outside of forest )
-        if self.bat.x < 10:
-            self.bat.x = 10
-            last_reward = REWARD_ON_EDGE
-        if self.bat.x > self.width - 10:
-            self.bat.x = self.width - 10
-            last_reward = REWARD_ON_EDGE
-        if self.bat.y < 10:
-            self.bat.y = 10
-            last_reward = REWARD_ON_EDGE
-        if self.bat.y > self.height - 10:
-            self.bat.y = self.height - 10
-            last_reward = REWARD_ON_EDGE
-
-        if distance < 20:
-            self.state.goal_x = self.width - self.state.goal_x
-            self.state.goal_y = np.random.randint(0, self.height)
-            last_reward = REWARD_GOAL
-
-        last_distance = distance
-        self.state.last_reward = last_reward
-        self.state.last_distance = last_distance
         self.state.sample.append(
             {'experiment': self.state.experiment, 'time': self.state.time, 'speed': BAT_SPEED, 'gamma': GAMMA,
              'signal1': self.bat.signal1, 'signal2': self.bat.signal2, 'signal3': self.bat.signal3,
-             'distance_to_goal': last_distance, 'action': rotation, 'orientation': orientation,
-             'reward': last_reward})
+             'distance_to_goal':  self.state.last_distance, 'action': rotation, 'orientation': orientation,
+             'reward': self.state.last_reward, 'loss': loss})
         self.state.time += 1
