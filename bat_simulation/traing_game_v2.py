@@ -159,9 +159,7 @@ class Game:
 
         self.state = State()
         self.state.brain = model
-        self.state.target_net = deepcopy(model)
-        self.state.target_net.load_state_dict(self.state.brain.state_dict())
-        self.state.target_net.eval()
+
         self.state.experiment = experiment_number
         self.state.sand = np.zeros((self.height, self.width))
         self.bat = Bat(x=self.width/2, y=self.height / 2)
@@ -211,7 +209,7 @@ class Game:
             self.bat.pos.y = self.height - 10
             last_reward = REWARD_ON_EDGE
 
-        if distance < 100:
+        if distance < 20:
             self.state.goal_x = self.width - self.state.goal_x
             self.state.goal_y = np.random.randint(0, self.height)
             self.state.goal = Vector(self.state.goal_x, self.state.goal_y)
