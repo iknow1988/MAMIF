@@ -14,7 +14,7 @@ MODLE_FILE = 'tmp_brain.pth'
 OUTPUT_CSV = 'tmp.csv'
 
 N_EPISODE = 40
-N_MOVES = 3000
+N_MOVES = 1500
 
 # class Trainer:
 #     def __init__(self,  bat_config: dict):

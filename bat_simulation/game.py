@@ -12,7 +12,7 @@ from ai.model import Dqn
 from constants import (BAT_SPEED, GAMMA, MARGIN_NO_OBSTICLE, MODEL_FILE,
                        NUM_OBSTABLES, PRINT_PATH, REWARD_BETTER_DISTANCE,
                        REWARD_GOAL, REWARD_HIT_TREE, REWARD_MOVE,
-                       REWARD_ON_EDGE)
+                       REWARD_ON_EDGE, SITE_MARGIN)
 from state import State
 
 
@@ -225,7 +225,7 @@ class Game(Widget):
     def _game_init(self):
         """Initialize some variables in the gamestate.
         """
-        self.state.goal_x = 10
+        self.state.goal_x = 50
         self.state.goal_y = self.state.largeur - 10
         self.state.goals_y = [i for i in range(self.state.largeur - 10)]
         self.state.last_reward = 0
@@ -236,17 +236,22 @@ class Game(Widget):
 
     def _bat_on_edge(self) -> bool:
         on_edge = False
-        if self.bat.x < 10:
-            self.bat.x = 10
+        if self.bat.x < SITE_MARGIN:
+            if self.bat.x < 0:
+                self.bat.x = 0
             on_edge = True
-        if self.bat.x > self.width - 10:
-            self.bat.x = self.width - 10
+        if self.bat.x > self.width - SITE_MARGIN:
+            if self.bat.x > self.width:
+                self.bat.x = self.width - 1
             on_edge = True
-        if self.bat.y < 10:
-            self.bat.y = 10
+        if self.bat.y < SITE_MARGIN:
+            if self.bat.y < 0:
+                self.bat.y = 0
             on_edge = True
-        if self.bat.y > self.height - 10:
-            self.bat.y = self.height - 10
+        if self.bat.y > self.height - SITE_MARGIN:
+            if self.bat.y > self.height:
+                self.bat.y = self.height - 1
+
             on_edge = True
         return on_edge
 
@@ -257,8 +262,9 @@ class Game(Widget):
                            2 + (self.bat.y - self.state.goal_y) ** 2)
 
         # (To discourage traversing outside of forest )
-        if self._bat_on_edge():
-            # print("Adjust ")
+        on_edge = self._bat_on_edge()
+        if on_edge:
+            print("Adjust ")
             last_reward = REWARD_ON_EDGE
 
         if self.state.sand[int(self.bat.x), int(self.bat.y)] > 0:
@@ -266,7 +272,7 @@ class Game(Widget):
             self.canvas.add(Color(255, 0, 0))
             self.canvas.add(Ellipse(pos=(self.bat.x, self.bat.y), size=(2, 2)))
             last_reward = REWARD_HIT_TREE
-        else:  # otherwise
+        elif not on_edge:  # otherwise
             self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
             last_reward = REWARD_MOVE
             if distance < self.state.last_distance:
@@ -308,7 +314,7 @@ class Game(Widget):
 
             # Here we overwrite the height and width in the obsticle object.
             obstacles.set_size(self.state.longueur + 1, self.state.largeur + 1)
-            obstacles.load()
+            # obstacles.load()
             self.state.sand = obstacles.get_sand()
             print("Sum")
             print(np.sum(self.state.sand))
@@ -342,6 +348,7 @@ class Game(Widget):
         # print("X : {} , Y : {}".format(self.bat.x, self.bat.y))
         # print(self.state.sand.shape)
         self._compute_reward()
+        print(self.state.last_reward)
 
         self.state.sample.append(
             {'experiment': self.state.experiment, 'time': self.state.time, 'speed': BAT_SPEED, 'gamma': GAMMA,

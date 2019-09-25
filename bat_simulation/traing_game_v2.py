@@ -12,7 +12,8 @@ from kivy.vector import Vector
 from ai.model import Dqn
 from constants import (BAT_SPEED, GAMMA, MARGIN_NO_OBSTICLE, NUM_OBSTABLES,
                        PRINT_PATH, REWARD_BETTER_DISTANCE, REWARD_GOAL,
-                       REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE)
+                       REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE,
+                       SITE_MARGIN)
 from state import State
 
 
@@ -32,9 +33,9 @@ class Bat:
         self.signal1: float = None
         self.signal2: float = None
         self.signal3: float = None
-        self.sensor1: Tuple = None
-        self.sensor2: Tuple = None
-        self.sensor3: Tuple = None
+        self.sensor1: Vector = None
+        self.sensor2: Vector = None
+        self.sensor3: Vector = None
         self.angle: float = 0
         self.velocity: Vector = None
         self.rotation: float = 0
@@ -97,6 +98,14 @@ class Bat:
 
         self.signal3 = self._compute_obstacle_density(
             state=state, x=int(self.sensor3[0]), y=int(self.sensor3[1]), width=10)
+
+        max_x, max_y = state.sand.shape
+        if self.sensor1[0] > max_x-10 or self.sensor1[0] < 10 or self.sensor1[1] > max_y-10 or self.sensor1[1] < 10:
+            self.signal1 = 1.
+        if self.sensor2[0] > max_x-10 or self.sensor2[0] < 10 or self.sensor2[1] > max_y-10 or self.sensor2[1] < 10:
+            self.signal2 = 1.
+        if self.sensor3[0] > max_x-10 or self.sensor3[0] < 10 or self.sensor3[1] > max_y-10 or self.sensor3[1] < 10:
+            self.signal3 = 1.
 
     def move(self, rotation: float, state: State):
         """Move indirection according to rotation.
@@ -172,7 +181,7 @@ class Game:
     def _game_init(self):
         """Initialize some variables in the gamestate.
         """
-        self.state.goal_x = 10
+        self.state.goal_x = 50
         self.state.goal_y = np.random.randint(0, self.height)
         self.state.goal = Vector(self.state.goal_x, self.state.goal_y)
         self.state.last_reward = 0
@@ -219,18 +228,23 @@ class Game:
     #     self.state.last_distance = distance
 
     def _bat_on_edge(self) -> bool:
+
         on_edge = False
-        if self.bat.pos.x < 10:
-            self.bat.pos.x = 10
+        if self.bat.pos.x < SITE_MARGIN:
+            if self.bat.pos.x < 0:
+                self.bat.pos.x = 0
             on_edge = True
-        if self.bat.pos.x > self.width - 10:
-            self.bat.pos.x = self.width - 10
+        if self.bat.pos.x > self.width - SITE_MARGIN:
+            if self.bat.pos.x > self.width:
+                self.bat.pos.x = self.width - 1
             on_edge = True
-        if self.bat.pos.y < 10:
-            self.bat.pos.y = 10
+        if self.bat.pos.y < SITE_MARGIN:
+            if self.bat.pos.y < 0:
+                self.bat.pos.y = 0
             on_edge = True
-        if self.bat.pos.y > self.height - 10:
-            self.bat.pos.y = self.height - 10
+        if self.bat.pos.y > self.height - SITE_MARGIN:
+            if self.bat.pos.y > self.height:
+                self.bat.pos.y = self.height - 1
             on_edge = True
         return on_edge
 
@@ -239,15 +253,17 @@ class Game:
         distance = self.bat.pos.distance(self.state.goal)
 
         # (To discourage traversing outside of forest )
-        if self._bat_on_edge():
-            # print("Adjust ")
+
+        on_edge = self._bat_on_edge()
+        if on_edge:
+
             last_reward = REWARD_ON_EDGE
 
         # print("x : {} , y: {}".format(int(self.bat.pos.x), int(self.bat.pos.y)))
         if self.state.sand[int(self.bat.pos.x), int(self.bat.pos.y)] > 0:
             self.bat.velocity = Vector(0.2, 0).rotate(self.bat.angle)
             last_reward = REWARD_HIT_TREE
-        else:  # otherwise
+        elif not on_edge:  # otherwise
             self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
             last_reward = REWARD_MOVE
             if distance < self.state.last_distance:
@@ -267,7 +283,7 @@ class Game:
         if self.state.first_update:
             self._game_init()
 
-            self.state.sand = self.obstacles.load(self.state.sand)
+            # self.state.sand = self.obstacles.load(self.state.sand)
             print("Sum")
             print(np.sum(self.state.sand))
             print(self.state.sand.shape)

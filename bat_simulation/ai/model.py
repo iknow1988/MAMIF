@@ -117,9 +117,10 @@ class Dqn():
             return random.randint(0, self.nb_action-1)
         # Predicted q_values for each of actions.
         # tensor of shape (1,41)
-        q_vals = self.online_net.forward(state)
-        # tensor of shape (1,41)
-        probs = F.softmax(q_vals, dim=1)
+        # q_vals = self.online_net.forward(state)
+        # # tensor of shape (1,41)
+        # probs = F.softmax(q_vals, dim=1)
+        probs = F.softmax(self.online_net(Variable(state))*100, dim=1)
 
         # action = probs.multinomial(1)
         action = probs.max(1)[1].view(1, 1)
