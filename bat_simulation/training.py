@@ -5,7 +5,7 @@ import random
 import pandas as pd
 
 from ai.model import Dqn
-from constants import GAMMA
+from constants import ANGLE_RANGE, GAMMA
 from traing_game_v2 import Game
 
 random.seed(66)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
         # 1 DEFINE MODEL
 
-        brain = Dqn(5, 41, GAMMA)
+        brain = Dqn(5, 2 * ANGLE_RANGE + 1, GAMMA)
         if path.exists(MODLE_FILE):
             brain.load(MODLE_FILE)
 

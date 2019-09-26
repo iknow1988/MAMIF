@@ -9,10 +9,11 @@ from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
 from ai.model import Dqn
-from constants import (BAT_SPEED, GAMMA, MARGIN_NO_OBSTICLE, MODEL_FILE,
-                       NUM_OBSTABLES, PRINT_PATH, REWARD_BETTER_DISTANCE,
-                       REWARD_GOAL, REWARD_HIT_TREE, REWARD_MOVE,
-                       REWARD_ON_EDGE, SITE_MARGIN)
+from constants import (ANGLE_RANGE, BAT_SPEED, GAMMA, LOAD_SAND,
+                       MARGIN_NO_OBSTICLE, MODEL_FILE, NUM_OBSTABLES, OFFSET,
+                       PRINT_PATH, REWARD_BETTER_DISTANCE, REWARD_GOAL,
+                       REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE,
+                       SITE_MARGIN)
 from state import State
 
 
@@ -37,7 +38,7 @@ class Bat(Widget):
 
     def __init__(self, **kwargs):
         super(Bat, self).__init__()
-        self._observable_degree = 20
+        self._observable_degree = ANGLE_RANGE
         self._observable_distance = 50
         self.observations = [
             self._observable_distance for i in range(2 * self._observable_degree + 1)]
@@ -77,12 +78,15 @@ class Bat(Widget):
         max_x, max_y = state.sand.shape
         x = int(x)
         y = int(y)
-        max_x = max(max_x, x + width)
-        max_y = max(max_y, y + width)
+        max_x = min(max_x, x + width)
+        max_y = min(max_y, y + width)
         min_x = max(0, x - width)
         min_y = max(0, y - width)
         n = (max_x - min_x) * (max_y - min_y)
-        density = int(np.sum(state.sand[min_x:max_x, min_y:max_y])) / n
+        count = int(np.sum(state.sand[min_x:max_x, min_y:max_y]))
+        print("Count : {}".format(count))
+        print("N : {}".format(n))
+        density = count / n
         return density
 
     def _update_sensor_position(self):
@@ -93,13 +97,13 @@ class Bat(Widget):
 
     def _update_sensor_signals(self, state):
         self.signal1 = self._compute_obstacle_density(
-            state=state, x=int(self.sensor1_x), y=int(self.sensor1_y), width=10)
+            state=state, x=int(self.sensor1_x), y=int(self.sensor1_y), width=self._observable_distance)
 
         self.signal2 = self._compute_obstacle_density(
-            state=state, x=int(self.sensor2_x), y=int(self.sensor2_y), width=10)
+            state=state, x=int(self.sensor2_x), y=int(self.sensor2_y), width=self._observable_distance)
 
         self.signal3 = self._compute_obstacle_density(
-            state=state, x=int(self.sensor3_x), y=int(self.sensor3_y), width=10)
+            state=state, x=int(self.sensor3_x), y=int(self.sensor3_y), width=self._observable_distance)
 
     def move(self, rotation: float, state: State):
         """Move indirection according to rotation.
@@ -108,8 +112,9 @@ class Bat(Widget):
         # 1 . UPDATE POSITION, ROTATION AND ANGLE
         self.pos = Vector(*self.velocity) + self.pos
         self.rotation = rotation
-        self.angle = self.angle + self.rotation
-
+        self.angle = (self.angle + self.rotation) % 360
+        print("Angle {}".format(self.angle
+                                ))
         # 2. UPDATE SENSOR POSITIONS.
         self._update_sensor_position()
 
@@ -123,6 +128,8 @@ class Bat(Widget):
             self.signal2 = 1.
         if self.sensor3_x > state.longueur - 10 or self.sensor3_x < 10 or self.sensor3_y > state.largeur - 10 or self.sensor3_y < 10:
             self.signal3 = 1.
+        print("Signals : {}".format(
+            [self.signal1, self.signal2, self.signal3]))
 
         # 4. COMPUTE THE DISTANCE TO CLOSEST OBSTICLES FOR EACH OBSERVABLE DEGREE
         # end_angle = self.angle + self._observable_degree
@@ -205,11 +212,12 @@ class Game(Widget):
         super(Game, self).__init__()
         self.height = 500
         self.width = 500
-        self.action2rotation = [i for i in range(-20, 21, 1)]
+        self.action2rotation = [
+            i for i in range(-ANGLE_RANGE, ANGLE_RANGE + 1, 1)]
 
         self.state = State()
 
-        self.state.brain = Dqn(5, 41, GAMMA)
+        self.state.brain = Dqn(5, 2 * ANGLE_RANGE + 1, GAMMA)
         if path.exists(MODEL_FILE):
             self.state.brain.load(MODEL_FILE)
 
@@ -237,22 +245,27 @@ class Game(Widget):
     def _bat_on_edge(self) -> bool:
         on_edge = False
         if self.bat.x < SITE_MARGIN:
-            if self.bat.x < 0:
-                self.bat.x = 0
+            # if self.bat.x < 0:
+            #     self.bat.x = 0
+            self.bat.x = SITE_MARGIN + OFFSET
             on_edge = True
         if self.bat.x > self.width - SITE_MARGIN:
-            if self.bat.x > self.width:
-                self.bat.x = self.width - 1
+            # if self.bat.x > self.width:
+            #     self.bat.x = self.width - 1
+            self.bat.x = self.width - SITE_MARGIN - OFFSET
             on_edge = True
         if self.bat.y < SITE_MARGIN:
-            if self.bat.y < 0:
-                self.bat.y = 0
+            # if self.bat.y < 0:
+            #     self.bat.y = 0
+            self.bat.y = SITE_MARGIN + OFFSET
             on_edge = True
-        if self.bat.y > self.height - SITE_MARGIN:
-            if self.bat.y > self.height:
-                self.bat.y = self.height - 1
 
+        if self.bat.y > self.height - SITE_MARGIN:
+            # if self.bat.y > self.height:
+            #     self.bat.y = self.height - 1
+            self.bat.y = self.height - SITE_MARGIN - OFFSET
             on_edge = True
+        print("X : {} , Y: {}".format(self.bat.x, self.bat.y))
         return on_edge
 
     def _compute_reward(self):
@@ -275,8 +288,8 @@ class Game(Widget):
         elif not on_edge:  # otherwise
             self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
             last_reward = REWARD_MOVE
-            if distance < self.state.last_distance:
-                last_reward = REWARD_BETTER_DISTANCE
+        elif distance < self.state.last_distance:
+            last_reward = REWARD_BETTER_DISTANCE
 
         # (To discourage traversing outside of forest )
         # if self.bat.x < 10:
@@ -314,7 +327,8 @@ class Game(Widget):
 
             # Here we overwrite the height and width in the obsticle object.
             obstacles.set_size(self.state.longueur + 1, self.state.largeur + 1)
-            # obstacles.load()
+            if LOAD_SAND:
+                obstacles.load()
             self.state.sand = obstacles.get_sand()
             print("Sum")
             print(np.sum(self.state.sand))
@@ -334,8 +348,9 @@ class Game(Widget):
 
         action, loss = self.state.brain.update(
             self.state.last_reward, last_signal)
+        print("Action : {}".format(action))
         rotation = self.action2rotation[action]
-
+        print("Rotation : {}".format(rotation))
         self.bat.move(rotation, self.state)
 
         self.goal.pos = (self.state.goal_x, self.state.goal_y)

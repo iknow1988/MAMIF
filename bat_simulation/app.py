@@ -11,7 +11,7 @@ from kivy.core.window import Window
 from constants import OUTPUT_FILE
 from game import Game, ObstacleWidget
 
-random.seed(66)
+random.seed(932)
 Window.size = (400, 400)
 
 
