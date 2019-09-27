@@ -181,24 +181,36 @@ class ObstacleMaker:
 
 
 class Game:
+    """The central logic of training process.
 
-    def __init__(self, model, experiment_number):
+    Attributes:
+    """
+
+    def __init__(self, model: Dqn, experiment_number: int):
+        """
+
+        Args:
+            model (Dqn): Model object for the decision making.
+            experiment_number (int): Experiment number to write into csv.
+        """
 
         self.height = 800
         self.width = 800
         self.action2rotation = [
             i for i in range(-ANGLE_RANGE, ANGLE_RANGE + 1, 1)]
 
+        # Initialize the game state
         self.state = State()
         self.state.brain = model
-
         self.state.experiment = experiment_number
         self.state.sand = np.zeros((self.height, self.width))
-        self.bat = Bat(x=self.width/2, y=self.height / 2)
 
+        # Setup Bat object
+        self.bat = Bat(x=self.width/2, y=self.height / 2)
         self.bat._update_sensor_position()
         self.bat._update_sensor_signals(self.state)
 
+        # Setup Obstacle object
         self.obstacles = ObstacleMaker(self.height, self.width)
 
     def _game_init(self):
@@ -214,41 +226,6 @@ class Game:
         self.state.time = 1
         self.state.longueur = self.width
         self.state.largeur = self.height
-
-    # def _compute_reward(self):
-
-    #     distance = self.bat.pos.distance(self.state.goal)
-
-    #     if self.state.sand[int(self.bat.pos.x), int(self.bat.pos.y)] > 0:
-    #         self.bat.velocity = Vector(0.2, 0).rotate(self.bat.angle)
-    #         last_reward = REWARD_HIT_TREE
-    #     else:  # otherwise
-    #         self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
-    #         last_reward = REWARD_MOVE
-    #         if distance < self.state.last_distance:
-    #             last_reward = REWARD_BETTER_DISTANCE
-    #     # (To discourage traversing outside of forest )
-    #     if self.bat.pos.x < 10:
-    #         self.bat.pos.x = 10
-    #         last_reward = REWARD_ON_EDGE
-    #     if self.bat.pos.x > self.width - 10:
-    #         self.bat.pos.x = self.width - 10
-    #         last_reward = REWARD_ON_EDGE
-    #     if self.bat.pos.y < 10:
-    #         self.bat.pos.y = 10
-    #         last_reward = REWARD_ON_EDGE
-    #     if self.bat.pos.y > self.height - 10:
-    #         self.bat.pos.y = self.height - 10
-    #         last_reward = REWARD_ON_EDGE
-
-    #     if distance < 20:
-    #         self.state.goal_x = self.width - self.state.goal_x
-    #         self.state.goal_y = np.random.randint(0, self.height)
-    #         self.state.goal = Vector(self.state.goal_x, self.state.goal_y)
-    #         last_reward = REWARD_GOAL
-
-    #     self.state.last_reward = last_reward
-    #     self.state.last_distance = distance
 
     def _bat_on_edge(self) -> bool:
 
@@ -278,25 +255,24 @@ class Game:
         return on_edge
 
     def _compute_reward(self):
+        """Compute reward based on the current state.
+        1. Reach goal (distance very small) : REWARD_GOAL
 
+        2. To discourage hitting tree.
+            sand[x,y] == 1 : REWARD_HIT_TREE
+
+        3. To discourage traversing outside of forest .
+            [x,y] on margin area: REWARD_ON_EDGE
+
+        4. To encourage better distance
+            : REWARD_BETTER_DISTANCE
+
+        5. To discourage useless moves.
+            : REWARD_MOVE
+        """
         distance = self.bat.pos.distance(self.state.goal)
 
-        # (To discourage traversing outside of forest )
-
-        on_edge = self._bat_on_edge()
-        if on_edge:
-
-            last_reward = REWARD_ON_EDGE
-
-        # print("x : {} , y: {}".format(int(self.bat.pos.x), int(self.bat.pos.y)))
-        if self.state.sand[int(self.bat.pos.x), int(self.bat.pos.y)] > 0:
-            self.bat.velocity = Vector(0.2, 0).rotate(self.bat.angle)
-            last_reward = REWARD_HIT_TREE
-        elif not on_edge:  # otherwise
-            self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
-            last_reward = REWARD_MOVE
-            if distance < self.state.last_distance:
-                last_reward = REWARD_BETTER_DISTANCE
+        self.state.last_distance = distance
 
         if distance < 20:
             valid_goal = False
@@ -306,10 +282,24 @@ class Game:
                 if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
                     valid_goal = True
             self.state.goal = Vector(self.state.goal_x, self.state.goal_y)
-            last_reward = REWARD_GOAL
+            self.state.last_reward = REWARD_GOAL
+            return
 
-        self.state.last_reward = last_reward
-        self.state.last_distance = distance
+        if self.state.sand[int(self.bat.pos.x), int(self.bat.pos.y)] > 0:
+            self.bat.velocity = Vector(0.2, 0).rotate(self.bat.angle)
+            self.state.last_reward = REWARD_HIT_TREE
+            return
+
+        if self._bat_on_edge():
+            self.state.last_reward = REWARD_ON_EDGE
+            return
+
+        if distance < self.state.last_distance:
+            self.state.last_reward = REWARD_BETTER_DISTANCE
+            return
+
+        self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
+        self.state.last_reward = REWARD_MOVE
 
     def update(self):
 
