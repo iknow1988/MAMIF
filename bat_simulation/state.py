@@ -23,3 +23,4 @@ class State:
         self.experiment: int
         self.time: int
         self.sample: List
+        self.orientation: float

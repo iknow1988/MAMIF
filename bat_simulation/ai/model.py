@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
-from constants import BATCH_SIZE, LEARNING_RATE, MODEL_FILE
+from constants import BATCH_SIZE, LEARNING_RATE, MODEL_FILE, TARGET_UPDATE
 
 
 class Network(nn.Module):
@@ -100,7 +100,7 @@ class Dqn():
         self.last_action = 0
         self.last_reward = 0
         self.epsilon = 0.05
-        self.target_update = 200
+        self.target_update = TARGET_UPDATE
         self.n_update = 0
 
     def _select_action(self, state: torch.Tensor):
