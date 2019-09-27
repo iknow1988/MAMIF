@@ -8,10 +8,10 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
 
-from constants import OUTPUT_FILE
+from constants import OUTPUT_FILE, SEED
 from game import Game, ObstacleWidget
 
-random.seed(932)
+random.seed(SEED)
 Window.size = (400, 400)
 
 

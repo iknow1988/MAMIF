@@ -9,11 +9,11 @@ from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
 from ai.model import Dqn
-from constants import (ANGLE_RANGE, BAT_SPEED, GAMMA, LOAD_SAND,
-                       MARGIN_NO_OBSTICLE, MODEL_FILE, NUM_OBSTABLES, OFFSET,
-                       PRINT_PATH, REWARD_BETTER_DISTANCE, REWARD_GOAL,
-                       REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE,
-                       SITE_MARGIN)
+from constants import (ANGLE_RANGE, BAT_OBSERVABLE_DISTANCE, BAT_SPEED, GAMMA,
+                       LOAD_SAND, MARGIN_NO_OBSTICLE, MODEL_FILE,
+                       NUM_OBSTABLES, OFFSET, PRINT_PATH,
+                       REWARD_BETTER_DISTANCE, REWARD_GOAL, REWARD_HIT_TREE,
+                       REWARD_MOVE, REWARD_ON_EDGE, SITE_MARGIN)
 from state import State
 
 
@@ -37,15 +37,24 @@ class Bat(Widget):
     signal3 = NumericProperty(0)
 
     def __init__(self, **kwargs):
+        """
+        Args:
+            **kwargs:
+        """
         super(Bat, self).__init__()
         self._observable_degree = ANGLE_RANGE
-        self._observable_distance = 50
+        self._observable_distance = BAT_OBSERVABLE_DISTANCE
         self.observations = [
             self._observable_distance for i in range(2 * self._observable_degree + 1)]
         self._distance_to_sensor = 10
 
     def _find_distance_to_closest_obsticles_along_angle(self, angle: float, state: State) -> int:
 
+        """
+        Args:
+            angle (float):
+            state (State):
+        """
         for distance in range(1, self._observable_distance):
             point = Vector(self.pos) + Vector(distance, 0).rotate(angle)
             try:
@@ -57,20 +66,22 @@ class Bat(Widget):
         return self._observable_distance
 
     def _update_sensor(self, angle: float) -> Vector:
+        
         """
-        :param angle: Angle between sensor the bat body.
-        :return: updated position for a sensor.
+        Args:
+            angle (float):
         """
         return Vector(self._distance_to_sensor, 0).rotate(angle) + self.pos
 
     def _compute_obstacle_density(self, state: State, x: int, y: int, width: int) -> float:
-        """Compute obsticle density within a given width centered around (x,y) coord.
+        """Compute obsticle density within a given width centered around (x,y)
+        coord.
 
         Args:
             state (State): [description]
-            x (float): [description]
-            y (float): [description]
-            width (float): [description]
+            x (int): [description]
+            y (int): [description]
+            width (int): [description]
 
         Returns:
             float: [description]
@@ -96,6 +107,10 @@ class Bat(Widget):
         self.sensor3 = self._update_sensor(angle=self.angle - 30)
 
     def _update_sensor_signals(self, state):
+        """
+        Args:
+            state:
+        """
         self.signal1 = self._compute_obstacle_density(
             state=state, x=int(self.sensor1_x), y=int(self.sensor1_y), width=self._observable_distance)
 
@@ -107,6 +122,10 @@ class Bat(Widget):
 
     def move(self, rotation: float, state: State):
         """Move indirection according to rotation.
+
+        Args:
+            rotation (float):
+            state (State):
         """
         # print("In move {}".format(type(self.signal1)))
         # 1 . UPDATE POSITION, ROTATION AND ANGLE
@@ -167,6 +186,12 @@ class ObstacleWidget(Widget):
 
     def __init__(self, width, height, **kwargs):
         # make sure we aren't overriding any important functionality
+        """
+        Args:
+            width:
+            height:
+            **kwargs:
+        """
         super(ObstacleWidget, self).__init__(**kwargs)
         # self.sand = np.zeros((width, height))
         # self.sand = np.random.randint(0, 2, size=(width, height))
@@ -197,6 +222,11 @@ class ObstacleWidget(Widget):
         return self.sand
 
     def set_size(self, width, height):
+        """
+        Args:
+            width:
+            height:
+        """
         self.width = width
         self.height = height
         self.sand = np.zeros((width, height))
@@ -209,6 +239,10 @@ class Game(Widget):
 
     def __init__(self, **kwargs):
 
+        """
+        Args:
+            **kwargs:
+        """
         super(Game, self).__init__()
         self.height = 500
         self.width = 500
@@ -231,8 +265,7 @@ class Game(Widget):
         self.bat.velocity = Vector(BAT_SPEED, 0)
 
     def _game_init(self):
-        """Initialize some variables in the gamestate.
-        """
+        """Initialize some variables in the gamestate."""
         self.state.goal_x = 50
         self.state.goal_y = self.state.largeur - 10
         self.state.goals_y = [i for i in range(self.state.largeur - 10)]
@@ -307,6 +340,11 @@ class Game(Widget):
 
         if distance < 20:
             self.state.goal_x = self.width - self.state.goal_x
+            valid_goal = False
+            while not valid_goal:
+                self.state.goal_y = np.random.randint(0, self.height)
+                if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
+                    valid_goal = True
             self.state.goal_y = np.random.randint(0, self.height)
             last_reward = REWARD_GOAL
 
@@ -318,6 +356,11 @@ class Game(Widget):
         # print("In update {}".format(type(self.bat.signal1)))
         # distance = np.sqrt((self.bat.x - self.state.goal_x) **
         #                    2 + (self.bat.y - self.state.goal_y) ** 2)
+        """
+        Args:
+            obstacles (ObstacleWidget):
+            dt:
+        """
         self.state.longueur = self.width
         self.state.largeur = self.height
         # longueur = 500

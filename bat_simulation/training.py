@@ -5,10 +5,10 @@ import random
 import pandas as pd
 
 from ai.model import Dqn
-from constants import ANGLE_RANGE, GAMMA
+from constants import ANGLE_RANGE, GAMMA, SEED
 from traing_game_v2 import Game
 
-random.seed(66)
+random.seed(SEED)
 
 MODLE_FILE = 'tmp_brain.pth'
 OUTPUT_CSV = 'tmp.csv'

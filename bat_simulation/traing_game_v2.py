@@ -10,10 +10,11 @@ from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
 from ai.model import Dqn
-from constants import (ANGLE_RANGE, BAT_SPEED, GAMMA, LOAD_SAND,
-                       MARGIN_NO_OBSTICLE, NUM_OBSTABLES, OFFSET, PRINT_PATH,
-                       REWARD_BETTER_DISTANCE, REWARD_GOAL, REWARD_HIT_TREE,
-                       REWARD_MOVE, REWARD_ON_EDGE, SITE_MARGIN)
+from constants import (ANGLE_RANGE, BAT_OBSERVABLE_DISTANCE, BAT_SPEED, GAMMA,
+                       LOAD_SAND, MARGIN_NO_OBSTICLE, NUM_OBSTABLES, OFFSET,
+                       PRINT_PATH, REWARD_BETTER_DISTANCE, REWARD_GOAL,
+                       REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE,
+                       SITE_MARGIN)
 from state import State
 
 
@@ -25,7 +26,7 @@ class Bat:
 
         self.pos = Vector(x, y)
         self._observable_degree = ANGLE_RANGE
-        self._observable_distance = 50
+        self._observable_distance = BAT_OBSERVABLE_DISTANCE
         self.observations = [
             self._observable_distance for i in range(2 * self._observable_degree + 1)]
         self._distance_to_sensor = 10
@@ -42,7 +43,15 @@ class Bat:
         self.rotation: float = 0
 
     def _find_distance_to_closest_obsticles_along_angle(self, angle: float, state: State) -> int:
+        """Find the distance to the cloest obsticle along a given angle.
 
+        Args:
+            angle (float): Angle of interest
+            state (State): Game state
+
+        Returns:
+            int: Distance to the cloest obsticle
+        """
         for distance in range(1, self._observable_distance):
             point = Vector(self.pos) + Vector(distance, 0).rotate(angle)
             try:
@@ -54,9 +63,13 @@ class Bat:
         return self._observable_distance
 
     def _update_sensor(self, angle: float) -> Vector:
-        """
-        :param angle: Angle between sensor the bat body.
-        :return: updated position for a sensor.
+        """ Update sensor postion based on the angle between body sensor
+
+        Args:
+            angle (float): Angle between body and sensor
+
+        Returns:
+            Vector: Position of the updated sensor
         """
 
         return Vector(self._distance_to_sensor, 0).rotate(angle) + self.pos
@@ -66,12 +79,11 @@ class Bat:
 
         Args:
             state (State): [description]
-            x (float): [description]
-            y (float): [description]
-            width (float): [description]
-
+            x (float): X cord 
+            y (float): Y cord 
+            width (float): Size of the range 
         Returns:
-            float: [description]
+            float: The density of the obsticle 
         """
         max_x, max_y = state.sand.shape
         x = int(x)
@@ -85,12 +97,21 @@ class Bat:
         return density
 
     def _update_sensor_position(self):
+        """Update all sensors' position.
+           This is called when the body position has changed
 
+        """
         self.sensor1 = self._update_sensor(angle=self.angle)
         self.sensor2 = self._update_sensor(angle=self.angle + 30)
         self.sensor3 = self._update_sensor(angle=self.angle - 30)
 
     def _update_sensor_signals(self, state):
+        """Update the value of all signals.
+           This is called when the positions body and sensors have changed
+
+        Args:
+            state ([type]): Game state
+        """
         self.signal1 = self._compute_obstacle_density(
             state=state, x=int(self.sensor1[0]), y=int(self.sensor1[1]), width=self._observable_distance)
 
@@ -278,8 +299,12 @@ class Game:
                 last_reward = REWARD_BETTER_DISTANCE
 
         if distance < 20:
+            valid_goal = False
             self.state.goal_x = self.width - self.state.goal_x
-            self.state.goal_y = np.random.randint(0, self.height)
+            while not valid_goal:
+                self.state.goal_y = np.random.randint(0, self.height)
+                if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
+                    valid_goal = True
             self.state.goal = Vector(self.state.goal_x, self.state.goal_y)
             last_reward = REWARD_GOAL
 
