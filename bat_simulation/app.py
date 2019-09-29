@@ -12,7 +12,7 @@ from constants import OUTPUT_FILE, SEED
 from game import Game, ObstacleWidget
 
 random.seed(SEED)
-Window.size = (400, 400)
+Window.size = (210, 210)
 
 
 class BatApp(App):

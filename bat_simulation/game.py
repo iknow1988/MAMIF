@@ -1,4 +1,5 @@
 import os.path as path
+import pickle
 import random
 
 import numpy as np
@@ -49,7 +50,6 @@ class Bat(Widget):
         self._distance_to_sensor = 10
 
     def _find_distance_to_closest_obsticles_along_angle(self, angle: float, state: State) -> int:
-
         """
         Args:
             angle (float):
@@ -66,7 +66,6 @@ class Bat(Widget):
         return self._observable_distance
 
     def _update_sensor(self, angle: float) -> Vector:
-        
         """
         Args:
             angle (float):
@@ -95,8 +94,8 @@ class Bat(Widget):
         min_y = max(0, y - width)
         n = (max_x - min_x) * (max_y - min_y)
         count = int(np.sum(state.sand[min_x:max_x, min_y:max_y]))
-        print("Count : {}".format(count))
-        print("N : {}".format(n))
+        # print("Count : {}".format(count))
+        # print("N : {}".format(n))
         density = count / n
         return density
 
@@ -132,8 +131,8 @@ class Bat(Widget):
         self.pos = Vector(*self.velocity) + self.pos
         self.rotation = rotation
         self.angle = (self.angle + self.rotation) % 360
-        print("Angle {}".format(self.angle
-                                ))
+        # print("Angle {}".format(self.angle
+        #                         ))
         # 2. UPDATE SENSOR POSITIONS.
         self._update_sensor_position()
 
@@ -147,8 +146,8 @@ class Bat(Widget):
             self.signal2 = 1.
         if self.sensor3_x > state.longueur - 10 or self.sensor3_x < 10 or self.sensor3_y > state.largeur - 10 or self.sensor3_y < 10:
             self.signal3 = 1.
-        print("Signals : {}".format(
-            [self.signal1, self.signal2, self.signal3]))
+        # print("Signals : {}".format(
+        #     [self.signal1, self.signal2, self.signal3]))
 
         # 4. COMPUTE THE DISTANCE TO CLOSEST OBSTICLES FOR EACH OBSERVABLE DEGREE
         # end_angle = self.angle + self._observable_degree
@@ -200,22 +199,57 @@ class ObstacleWidget(Widget):
         self.height = height
         self.sand = np.zeros((width, height))
 
+    # def load(self):
+
+    #     rectangles = []
+    #     for _ in range(NUM_OBSTABLES):
+    #         pos_x = random.randint(
+    #             MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
+    #         pos_y = random.randint(
+    #             MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
+    #         width = random.randint(10, 40)
+    #         self.sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
+    #         rectangles.append([pos_x, pos_y, width])
+    #         #
+    #     self.canvas.add(Color(0.8, 0.7, 0))
+    #     for rect in rectangles:
+    #         pos_x = rect[0]
+    #         pos_y = rect[1]
+    #         width = rect[2]
+    #         self.canvas.add(Rectangle(pos=(pos_x, pos_y), size=(width, width)))
     def load(self):
+
         rectangles = []
-        for _ in range(NUM_OBSTABLES):
-            pos_x = random.randint(
-                MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
-            pos_y = random.randint(
-                MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
-            width = random.randint(10, 40)
-            self.sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
-            rectangles.append([pos_x, pos_y, width])
-            #
+        cells = None
+        with open('shape', 'rb') as f:
+            cells = np.array(pickle.load(f))
+            print(cells)
+        max_x, max_y = cells.shape
+        print(cells.shape)
+        for i in range(max_x):
+            for j in range(max_y):
+                if cells[i, max_y-1 - j] > 0:
+                    self.sand[i, j] = 1
+                    rectangles.append([i, j, 2])
+
+        # for _ in range(NUM_OBSTABLES):
+        #     pos_x = random.randint(
+        #         MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
+        #     pos_y = random.randint(
+        #         MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
+        #     width = random.randint(10, 40)
+        #     self.sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
+        #     rectangles.append([pos_x, pos_y, width])
+        #
+        # print(self.sand.shape)
+        # print(type(self.sand))
         self.canvas.add(Color(0.8, 0.7, 0))
+        # self.canvas.add(Rectangle(pos=(50, 0), size=(50, 50)))
         for rect in rectangles:
             pos_x = rect[0]
             pos_y = rect[1]
             width = rect[2]
+            print("x : {} , y : {}".format(pos_x, pos_y))
             self.canvas.add(Rectangle(pos=(pos_x, pos_y), size=(width, width)))
 
     def get_sand(self):
@@ -238,7 +272,6 @@ class Game(Widget):
     goal = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-
         """
         Args:
             **kwargs:
@@ -298,7 +331,7 @@ class Game(Widget):
             #     self.bat.y = self.height - 1
             self.bat.y = self.height - SITE_MARGIN - OFFSET
             on_edge = True
-        print("X : {} , Y: {}".format(self.bat.x, self.bat.y))
+        # print("X : {} , Y: {}".format(self.bat.x, self.bat.y))
         return on_edge
 
     def _compute_reward(self):
@@ -373,9 +406,9 @@ class Game(Widget):
             if LOAD_SAND:
                 obstacles.load()
             self.state.sand = obstacles.get_sand()
-            print("Sum")
-            print(np.sum(self.state.sand))
-            print(self.state.sand.shape)
+            # print("Sum")
+            # print(np.sum(self.state.sand))
+            # print(self.state.sand.shape)
 
         # goal_y = min(goals_y, key=lambda x: np.sqrt(
         #     (self.bat.x - goal_x)**2 + (self.bat.y - x)**2))
@@ -391,9 +424,9 @@ class Game(Widget):
 
         action, loss = self.state.brain.update(
             self.state.last_reward, last_signal)
-        print("Action : {}".format(action))
+        # print("Action : {}".format(action))
         rotation = self.action2rotation[action]
-        print("Rotation : {}".format(rotation))
+        # print("Rotation : {}".format(rotation))
         self.bat.move(rotation, self.state)
 
         self.goal.pos = (self.state.goal_x, self.state.goal_y)
@@ -406,7 +439,7 @@ class Game(Widget):
         # print("X : {} , Y : {}".format(self.bat.x, self.bat.y))
         # print(self.state.sand.shape)
         self._compute_reward()
-        print(self.state.last_reward)
+        # print(self.state.last_reward)
 
         self.state.sample.append(
             {'experiment': self.state.experiment, 'time': self.state.time, 'speed': BAT_SPEED, 'gamma': GAMMA,

@@ -31,6 +31,8 @@ Kivy = "==1.11.1"
 Pillow = "==6.1.0"
 Pygments = "==2.4.2"
 Cython = "==0.29.10"
+pyshp = "*"
+shapely = "*"
 
 [requires]
 python_version = "3.7"

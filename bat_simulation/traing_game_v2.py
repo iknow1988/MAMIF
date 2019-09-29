@@ -3,10 +3,6 @@ from copy import deepcopy
 from typing import List, Tuple
 
 import numpy as np
-from kivy.graphics import Color, Ellipse, Rectangle
-from kivy.properties import (NumericProperty, ObjectProperty,
-                             ReferenceListProperty)
-from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
 from ai.model import Dqn
