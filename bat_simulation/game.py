@@ -301,7 +301,7 @@ class Game(Widget):
         self.bat.velocity = Vector(BAT_SPEED, 0)
 
     def _init_goals(self):
-        self.state.goal_x = self.width - MARGIN_TO_GOAL_X_AXIS
+        self.state.goal_x = self.width - MARGIN_NO_OBSTICLE + 10
 
         valid_goal = False
         print("Shape : {}".format(self.state.sand.shape))

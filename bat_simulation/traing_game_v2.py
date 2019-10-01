@@ -226,7 +226,7 @@ class Game:
         self.obstacles = ObstacleMaker(self.height, self.width)
 
     def _init_goal(self):
-        self.state.goal_x = MARGIN_TO_GOAL_X_AXIS
+        self.state.goal_x = self.width - MARGIN_TO_GOAL_X_AXIS + 10
         valid_goal = False
         while not valid_goal:
             self.state.goal_y = random.randint(
