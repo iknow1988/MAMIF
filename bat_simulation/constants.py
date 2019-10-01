@@ -10,7 +10,7 @@ NUM_OBSTABLES = 40
 RANDOM_OBSTACLES = True  # Ture => Use random obstacles
 MARGIN_NO_OBSTICLE = 20  # Form the boundaries where the obsticle exist
 SITE_MARGIN = 1
-LOAD_SAND = True  # False => No obstacles
+LOAD_SAND = False  # False => No obstacles
 OUTPUT_FILE = 'tmp.csv'
 SEED = 101
 SHAPE_FILE = 'shape'
