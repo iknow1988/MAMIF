@@ -7,24 +7,27 @@ ANGLE_RANGE = 20
 OFFSET = BAT_SPEED * 2
 PRINT_PATH = True
 NUM_OBSTABLES = 40
+RANDOM_OBSTACLES = True  # Ture => Use random obstacles
 MARGIN_NO_OBSTICLE = 20
 SITE_MARGIN = 1
-LOAD_SAND = True
+LOAD_SAND = False  # False => No obstacles
 OUTPUT_FILE = 'tmp.csv'
-SEED = 322
-
+SEED = 54
+SHAPE_FILE = 'shape'
+GAME_SIZE = 401
+MARGIN_TO_GOAL_X_AXIS = BAT_SPEED * 10
 
 # REWARD SETTINGS
 REWARD_HIT_TREE = -1  # -1
 REWARD_MOVE = -0.3
 REWARD_BETTER_DISTANCE = 0.2
 REWARD_ON_EDGE = -0.9
-REWARD_GOAL = 6  # 5
+REWARD_GOAL = 10  # 5
 
 
 # MODEL SETTINGS
 MODEL_FILE = 'tmp_brain.pth'
-GAMMA = 0.95  # discount rate
+GAMMA = 0.96  # discount rate
 LEARNING_RATE = 0.0001
 BATCH_SIZE = 200  # training batch size
-TARGET_UPDATE = 200  # number of moves to update the target network
+TARGET_UPDATE = 100  # number of moves to update the target network

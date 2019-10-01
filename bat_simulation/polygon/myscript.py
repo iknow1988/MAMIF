@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     distance = 40
     width = 0.2
-    g.plot(distance_from_center=distance)
+    # g.plot(distance_from_center=distance)
 
     minx = -distance
     miny = -distance

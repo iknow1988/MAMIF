@@ -1,3 +1,4 @@
+import pickle
 import random
 from copy import deepcopy
 from typing import List, Tuple
@@ -6,11 +7,12 @@ import numpy as np
 from kivy.vector import Vector
 
 from ai.model import Dqn
-from constants import (ANGLE_RANGE, BAT_OBSERVABLE_DISTANCE, BAT_SPEED, GAMMA,
-                       LOAD_SAND, MARGIN_NO_OBSTICLE, NUM_OBSTABLES, OFFSET,
-                       PRINT_PATH, REWARD_BETTER_DISTANCE, REWARD_GOAL,
-                       REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE,
-                       SITE_MARGIN)
+from constants import (ANGLE_RANGE, BAT_OBSERVABLE_DISTANCE, BAT_SPEED,
+                       GAME_SIZE, GAMMA, LOAD_SAND, MARGIN_NO_OBSTICLE,
+                       MARGIN_TO_GOAL_X_AXIS, NUM_OBSTABLES, OFFSET,
+                       PRINT_PATH, RANDOM_OBSTACLES, REWARD_BETTER_DISTANCE,
+                       REWARD_GOAL, REWARD_HIT_TREE, REWARD_MOVE,
+                       REWARD_ON_EDGE, SHAPE_FILE, SITE_MARGIN)
 from state import State
 
 
@@ -164,14 +166,26 @@ class ObstacleMaker:
 
     def load(self, sand: np.array) -> np.array:
 
-        for _ in range(NUM_OBSTABLES):
-            pos_x = random.randint(
-                MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
-            pos_y = random.randint(
-                MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
+        if RANDOM_OBSTACLES:
+            for _ in range(NUM_OBSTABLES):
+                pos_x = random.randint(
+                    MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
+                pos_y = random.randint(
+                    MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
 
-            width = random.randint(10, 40)
-            sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
+                width = random.randint(10, 40)
+                sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
+        else:
+            cells = None
+            with open(SHAPE_FILE, 'rb') as f:
+                cells = np.array(pickle.load(f))
+
+            max_x, max_y = cells.shape
+            print(cells.shape)
+            for i in range(max_x):
+                for j in range(max_y):
+                    if cells[i, max_y-1 - j] > 0:
+                        sand[i, j] = 1
 
         return sand
 
@@ -188,8 +202,8 @@ class Game:
             experiment_number (int): Experiment number to write into csv.
         """
 
-        self.height = 800
-        self.width = 800
+        self.height = GAME_SIZE
+        self.width = GAME_SIZE
         self.action2rotation = [
             i for i in range(-ANGLE_RANGE, ANGLE_RANGE + 1, 1)]
 
@@ -200,19 +214,32 @@ class Game:
         self.state.sand = np.zeros((self.height, self.width))
 
         # Setup Bat object
-        self.bat = Bat(x=self.width/2, y=self.height / 2)
+        bat_x = MARGIN_TO_GOAL_X_AXIS
+        bat_y = random.randint(
+            MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
+
+        self.bat = Bat(x=bat_x, y=bat_y)
         self.bat._update_sensor_position()
         self.bat._update_sensor_signals(self.state)
 
         # Setup Obstacle object
         self.obstacles = ObstacleMaker(self.height, self.width)
 
+    def _init_goal(self):
+        self.state.goal_x = MARGIN_TO_GOAL_X_AXIS
+        valid_goal = False
+        while not valid_goal:
+            self.state.goal_y = random.randint(
+                MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
+            if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
+                valid_goal = True
+        self.state.goal = Vector(self.state.goal_x, self.state.goal_y)
+
     def _game_init(self):
         """Initialize some variables in the gamestate.
         """
-        self.state.goal_x = 50
-        self.state.goal_y = np.random.randint(0, self.height)
-        self.state.goal = Vector(self.state.goal_x, self.state.goal_y)
+        self._init_goal()
+
         self.state.last_reward = 0
         self.state.last_distance = 0
         self.state.first_update = False
@@ -374,7 +401,8 @@ class Game:
             valid_goal = False
             self.state.goal_x = self.width - self.state.goal_x
             while not valid_goal:
-                self.state.goal_y = np.random.randint(0, self.height)
+                self.state.goal_y = random.randint(
+                    MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
                 if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
                     valid_goal = True
             self.state.goal = Vector(self.state.goal_x, self.state.goal_y)

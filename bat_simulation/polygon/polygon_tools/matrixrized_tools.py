@@ -8,6 +8,17 @@ from .TreeGrid2D import TreeGrid2D
 
 
 def mapping_from_point_to_cell(x_axis_used: List[float], y_axis_used: List[float], x: float, y: float) -> Tuple[int, int]:
+    """Returns a tuple of indices, map x to the index of x_axis_used, and map y to the index of y_axis_used
+
+    Args:
+        x_axis_used (List[float]): [description]
+        y_axis_used (List[float]): [description]
+        x (float): [description]
+        y (float): [description]
+
+    Returns:
+        Tuple[int, int]: [description]
+    """
 
     try:
         x_cell_axis = x_axis_used.tolist().index(x)
@@ -26,8 +37,8 @@ def make_polygon(minx, miny, maxx, maxy) -> Polygon:
     return Polygon([[minx, miny], [minx, maxy], [maxx, maxy], [maxx, miny]])
 
 
-def _generate_x_y_axis_sequence(minx: float, maxx: float,
-                                miny: float, maxy: float, width: float) -> Tuple:
+def generate_x_y_axis_sequence(minx: float, maxx: float,
+                               miny: float, maxy: float, width: float) -> Tuple:
     """
     Return
         Tuple of np.array
@@ -75,6 +86,7 @@ def generate_list_of_blocked_points(polygon: Polygon, x_axis_used: np.array,
 
     assert (point_grid.shape[0] == len(x_axis) * len(y_axis))
 
+    # (x,y) cord of each point should be in the set of (x_axis_used, y_axis_used)
     points_in_square = [Point(d) for d in point_grid]
 
     points_in_polygon = [p for p in points_in_square if polygon.contains(p)]
@@ -100,27 +112,23 @@ def matrixrize_polygon(minx: float, miny: float, maxx: float, maxy: float,
     """
 
     # Generate sequences for constuction of the grid.
-    x_axis, y_axis = _generate_x_y_axis_sequence(minx, maxx, miny, maxy, width)
+    x_axis, y_axis = generate_x_y_axis_sequence(minx, maxx, miny, maxy, width)
 
     # Step up a empty grid.
     matrix_cells = [[0 for i in range(len(x_axis))]
                     for j in range(len(y_axis))]
 
-    for p in tree_grid.polygon_list:
+    for polygon in tree_grid.polygon_list:
 
         # Generate all points inside the given polygon
-        blocked_points = generate_list_of_blocked_points(p, x_axis_used=x_axis,
+        blocked_points = generate_list_of_blocked_points(polygon, x_axis_used=x_axis,
                                                          y_axis_used=y_axis, width=width)
 
         K, J = len(x_axis) - 1, len(y_axis) - 1
-        # print("J : {}".format(J))
-        # M = np.array(matrix_cells)
-        # print("M : {}".format(M.shape))
 
-        for p in blocked_points:
+        for point in blocked_points:
 
-            x, y = mapping_from_point_to_cell(x_axis, y_axis, p.x, p.y)
-            # print("x : {} , y : {}".format(x, y))
-            # if y > 0:
+            x, y = mapping_from_point_to_cell(x_axis, y_axis, point.x, point.y)
+
             matrix_cells[J - y][x] = 1
     return matrix_cells

@@ -11,10 +11,11 @@ from kivy.vector import Vector
 
 from ai.model import Dqn
 from constants import (ANGLE_RANGE, BAT_OBSERVABLE_DISTANCE, BAT_SPEED, GAMMA,
-                       LOAD_SAND, MARGIN_NO_OBSTICLE, MODEL_FILE,
-                       NUM_OBSTABLES, OFFSET, PRINT_PATH,
-                       REWARD_BETTER_DISTANCE, REWARD_GOAL, REWARD_HIT_TREE,
-                       REWARD_MOVE, REWARD_ON_EDGE, SITE_MARGIN)
+                       LOAD_SAND, MARGIN_NO_OBSTICLE, MARGIN_TO_GOAL_X_AXIS,
+                       MODEL_FILE, NUM_OBSTABLES, OFFSET, PRINT_PATH,
+                       RANDOM_OBSTACLES, REWARD_BETTER_DISTANCE, REWARD_GOAL,
+                       REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE,
+                       SHAPE_FILE, SITE_MARGIN)
 from state import State
 
 
@@ -220,36 +221,36 @@ class ObstacleWidget(Widget):
     def load(self):
 
         rectangles = []
-        cells = None
-        with open('shape', 'rb') as f:
-            cells = np.array(pickle.load(f))
-            print(cells)
-        max_x, max_y = cells.shape
-        print(cells.shape)
-        for i in range(max_x):
-            for j in range(max_y):
-                if cells[i, max_y-1 - j] > 0:
-                    self.sand[i, j] = 1
-                    rectangles.append([i, j, 2])
+        if RANDOM_OBSTACLES:
+            for _ in range(NUM_OBSTABLES):
+                pos_x = random.randint(
+                    MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
+                pos_y = random.randint(
+                    MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
+                width = random.randint(10, 40)
+                self.sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
+                rectangles.append([pos_x, pos_y, width])
+        else:
+            cells = None
+            with open(SHAPE_FILE, 'rb') as f:
+                cells = np.array(pickle.load(f))
 
-        # for _ in range(NUM_OBSTABLES):
-        #     pos_x = random.randint(
-        #         MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
-        #     pos_y = random.randint(
-        #         MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
-        #     width = random.randint(10, 40)
-        #     self.sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
-        #     rectangles.append([pos_x, pos_y, width])
-        #
-        # print(self.sand.shape)
-        # print(type(self.sand))
+            max_x, max_y = cells.shape
+            print(cells.shape)
+            for i in range(max_x):
+                for j in range(max_y):
+                    if cells[i, max_y-1 - j] > 0:
+                        self.sand[i, j] = 1
+                        rectangles.append([i, j, 1])
+        print(self.sand.shape)
+        print(type(self.sand))
         self.canvas.add(Color(0.8, 0.7, 0))
-        # self.canvas.add(Rectangle(pos=(50, 0), size=(50, 50)))
+
         for rect in rectangles:
             pos_x = rect[0]
             pos_y = rect[1]
             width = rect[2]
-            print("x : {} , y : {}".format(pos_x, pos_y))
+            # print("x : {} , y : {}".format(pos_x, pos_y))
             self.canvas.add(Rectangle(pos=(pos_x, pos_y), size=(width, width)))
 
     def get_sand(self):
@@ -292,21 +293,34 @@ class Game(Widget):
 
         # self.bat = ObjectProperty(None)
         # self.goal = ObjectProperty(None)
-
-    def serve_bat(self):
-        self.bat.center = self.center
+    def _init_bat(self):
+        bat_x = MARGIN_TO_GOAL_X_AXIS
+        bat_y = random.randint(
+            MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
+        self.bat.pos = [bat_x, bat_y]
         self.bat.velocity = Vector(BAT_SPEED, 0)
+
+    def _init_goals(self):
+        self.state.goal_x = self.width - MARGIN_TO_GOAL_X_AXIS
+
+        valid_goal = False
+        print("Shape : {}".format(self.state.sand.shape))
+        while not valid_goal:
+            self.state.goal_y = random.randint(
+                MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
+            if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
+                valid_goal = True
+        self.state.goals_y = [i for i in range(self.state.largeur - 10)]
 
     def _game_init(self):
         """Initialize some variables in the gamestate."""
-        self.state.goal_x = 50
-        self.state.goal_y = self.state.largeur - 10
-        self.state.goals_y = [i for i in range(self.state.largeur - 10)]
+        self._init_goals()
         self.state.last_reward = 0
         self.state.last_distance = 0
         self.state.first_update = False
         self.state.sample = []
         self.state.time = 1
+        self._init_bat()
 
     def _bat_on_edge(self) -> bool:
         on_edge = False
@@ -378,7 +392,7 @@ class Game(Widget):
                 self.state.goal_y = np.random.randint(0, self.height)
                 if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
                     valid_goal = True
-            self.state.goal_y = np.random.randint(0, self.height)
+
             last_reward = REWARD_GOAL
 
         self.state.last_reward = last_reward
@@ -394,18 +408,20 @@ class Game(Widget):
             obstacles (ObstacleWidget):
             dt:
         """
+        print(self.bat.pos)
         self.state.longueur = self.width
         self.state.largeur = self.height
         # longueur = 500
         # largeur = 500
         if self.state.first_update:
-            self._game_init()
-
-            # Here we overwrite the height and width in the obsticle object.
             obstacles.set_size(self.state.longueur + 1, self.state.largeur + 1)
             if LOAD_SAND:
                 obstacles.load()
             self.state.sand = obstacles.get_sand()
+            self._game_init()
+
+            # Here we overwrite the height and width in the obsticle object.
+
             # print("Sum")
             # print(np.sum(self.state.sand))
             # print(self.state.sand.shape)

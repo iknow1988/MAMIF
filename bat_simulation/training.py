@@ -16,42 +16,6 @@ OUTPUT_CSV = 'tmp.csv'
 N_EPISODE = 40
 N_MOVES = 1500
 
-# class Trainer:
-#     def __init__(self,  bat_config: dict):
-
-#         self.bat_config = bat_config
-#         self.prev_data: pd.DataFrame
-#         self.experiment: int = 0
-#         self.game: Game = None
-
-#     def load_history(self, model_file: str = MODLE_FILE, output_csv_file: str = OUTPUT_CSV):
-#         if path.exists(output_csv_file):
-#             self.prev_data = pd.read_csv(output_csv_file)
-#             self.experiment = self.prev_data['experiment'].max() + 1
-
-#         else:
-#             columns = ['experiment', 'time', 'speed', 'gamma', 'signal1', 'signal2',
-#                        'signal3', 'distance_to_goal', 'action', 'orientation', 'reward']
-#             self.prev_data = pd.DataFrame(columns=columns)
-#             self.experiment = 1
-
-#     def save_model(self):
-#         print("saving brain...")
-#         self.game.model.save(MODLE_FILE)
-
-#     def save_data(self):
-#         print("saving data...")
-#         data = pd.concat(
-#             [self.prev_data, pd.DataFrame(self.game.state.sample)])
-#         data.to_csv(OUTPUT_FILE, index=False)
-
-#     def train(self, model: Dqn):
-
-#         self.game = Game(model=model)
-#         for i in range(10):
-
-#             self.load_history()
-
 
 if __name__ == '__main__':
     for i in range(N_EPISODE):

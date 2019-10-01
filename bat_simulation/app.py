@@ -1,5 +1,6 @@
 import atexit
 import os.path as path
+import pickle
 import random
 from functools import partial
 
@@ -8,11 +9,19 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
 
-from constants import OUTPUT_FILE, SEED
+from constants import (GAME_SIZE, OUTPUT_FILE, RANDOM_OBSTACLES, SEED,
+                       SHAPE_FILE)
 from game import Game, ObstacleWidget
 
 random.seed(SEED)
-Window.size = (210, 210)
+
+if not RANDOM_OBSTACLES:
+    with open(SHAPE_FILE, 'rb') as f:
+        cells = pickle.load(f)
+        size = len(cells)//2 + 1
+else:
+    size = GAME_SIZE
+Window.size = (size, size)
 
 
 class BatApp(App):
@@ -28,7 +37,7 @@ class BatApp(App):
 
         self.parent = Game()
         self.parent.state.experiment = self.experiment
-        self.parent.serve_bat()
+        # self.parent.serve_bat()
         self.obstacles = ObstacleWidget(100, 50)
         Clock.schedule_interval(
             partial(self.parent.update, self.obstacles), 1.0/120.0)
