@@ -291,8 +291,6 @@ class Game(Widget):
 
         self.state.experiment = 1
 
-        # self.bat = ObjectProperty(None)
-        # self.goal = ObjectProperty(None)
     def _init_bat(self):
         bat_x = MARGIN_TO_GOAL_X_AXIS
         bat_y = random.randint(
@@ -301,7 +299,7 @@ class Game(Widget):
         self.bat.velocity = Vector(BAT_SPEED, 0)
 
     def _init_goals(self):
-        self.state.goal_x = self.width - MARGIN_NO_OBSTICLE + 10
+        self.state.goal_x = self.width - MARGIN_NO_OBSTICLE
 
         valid_goal = False
         print("Shape : {}".format(self.state.sand.shape))
@@ -310,7 +308,7 @@ class Game(Widget):
                 MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
             if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
                 valid_goal = True
-        self.state.goals_y = [i for i in range(self.state.largeur - 10)]
+        # self.state.goals_y = [i for i in range(self.state.largeur - 10)]
 
     def _game_init(self):
         """Initialize some variables in the gamestate."""

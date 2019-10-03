@@ -13,8 +13,8 @@ random.seed(SEED)
 MODLE_FILE = 'tmp_brain.pth'
 OUTPUT_CSV = 'tmp.csv'
 
-
 if __name__ == '__main__':
+
     for i in range(N_EPISODE):
 
         print("Episode : {}".format(i))

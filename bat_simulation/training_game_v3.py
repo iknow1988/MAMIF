@@ -20,7 +20,7 @@ class Bat:
     """Store bat positions and compute input features for Dqn Model.
     """
 
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: float, y: float, speed: int = BAT_SPEED):
 
         self.pos = Vector(x, y)
         self._observable_degree = ANGLE_RANGE
@@ -194,7 +194,7 @@ class Game:
     """The central logic of training process.
     """
 
-    def __init__(self, model: Dqn, experiment_number: int):
+    def __init__(self, model: Dqn, experiment_number: int, bat_speed: int = BAT_SPEED):
         """
 
         Args:
@@ -218,7 +218,8 @@ class Game:
         bat_y = random.randint(
             MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
 
-        self.bat = Bat(x=bat_x, y=bat_y)
+        self.bat = Bat(x=bat_x, y=bat_y, speed=bat_speed)
+
         self.bat._update_sensor_position()
         self.bat._update_sensor_signals(self.state)
 
