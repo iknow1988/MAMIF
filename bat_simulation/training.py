@@ -5,16 +5,13 @@ import random
 import pandas as pd
 
 from ai.model import Dqn
-from constants import ANGLE_RANGE, GAMMA, SEED
+from constants import ANGLE_RANGE, GAMMA, N_EPISODE, N_MOVES, SEED
 from traing_game_v2 import Game
 
 random.seed(SEED)
 
 MODLE_FILE = 'tmp_brain.pth'
 OUTPUT_CSV = 'tmp.csv'
-
-N_EPISODE = 40
-N_MOVES = 1500
 
 
 if __name__ == '__main__':

@@ -8,8 +8,6 @@ from ai.model import Dqn
 from constants import ANGLE_RANGE, GAMMA, SEED
 from training_game_v3 import Game
 
-random.seed(SEED)
-
 MODLE_FILE = 'base_brain.pth'
 OUTPUT_CSV = 'eval.csv'
 
@@ -20,6 +18,7 @@ N_MOVES = 1500
 if __name__ == '__main__':
     for i in range(N_EPISODE):
 
+        random.seed(random.randint(0, 1000))
         print("Episode : {}".format(i))
         # INIT ENV FOR TRAINING
 
