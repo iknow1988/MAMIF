@@ -1,0 +1,71 @@
+<Bat>:
+    size: 10, 5
+    canvas:
+        PushMatrix
+        Rotate:
+            angle: self.angle
+            origin: self.center
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        PopMatrix
+
+<Ball1>:
+    size: 5,5
+    canvas:
+        Color:
+            rgba: 1,0,0,1
+        Ellipse:
+            pos: self.pos
+            size: self.size
+<Ball2>:
+    size: 5,5
+    canvas:
+        Color:
+            rgba: 0,1,1,1
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+<Ball3>:
+    size: 5,5
+    canvas:
+        Color:
+            rgba: 1,1,0,1
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+<Goal>:
+    size: 5,5
+    canvas:
+        Color:
+            rgba: 0,255,0,1
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+<Game>:
+    height: 500
+    width: 500
+    bat: game_bat
+    ball1: game_ball1
+    ball2: game_ball2
+    ball3: game_ball3
+    goal: game_goal
+
+    Bat:
+        id: game_bat
+        center: self.parent.center
+    Ball1:
+        id: game_ball1
+        center: self.parent.center
+    Ball2:
+        id: game_ball2
+        center: self.parent.center
+    Ball3:
+        id: game_ball3
+        center: self.parent.center
+    Goal:
+        id: game_goal
+        center: self.parent.center
