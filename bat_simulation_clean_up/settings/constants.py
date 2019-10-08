@@ -6,9 +6,9 @@ ANGLE_RANGE = 20
 # ENV SETTINGS
 OFFSET = BAT_SPEED * 2
 PRINT_PATH = True
-NUM_OBSTABLES = 20
+NUM_OBSTACLES = 20
 RANDOM_OBSTACLES = True  # Ture => Use random obstacles
-MARGIN_NO_OBSTICLE = 10  # Form the boundaries where the obsticle exist
+MARGIN_NO_OBSTACLE = 10  # Form the boundaries where obstacles are within.
 SITE_MARGIN = 1
 LOAD_SAND = True  # False => No obstacles
 OUTPUT_FILE = 'tmp.csv'

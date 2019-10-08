@@ -11,14 +11,13 @@ from kivy.vector import Vector
 
 from ai.model import Dqn
 from settings.constants import (ANGLE_RANGE, BAT_OBSERVABLE_DISTANCE, BAT_SPEED, GAMMA,
-                                LOAD_SAND, MARGIN_NO_OBSTICLE, MARGIN_TO_GOAL_X_AXIS,
-                                NUM_OBSTABLES, OFFSET, PRINT_PATH,
+                                LOAD_SAND, MARGIN_NO_OBSTACLE, MARGIN_TO_GOAL_X_AXIS,
+                                NUM_OBSTACLES, OFFSET, PRINT_PATH,
                                 RANDOM_OBSTACLES, REWARD_BETTER_DISTANCE, REWARD_GOAL,
                                 REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE,
                                 SHAPE_FILE, SITE_MARGIN)
 
 from components.state import State
-
 
 
 class Bat(Widget):
@@ -202,33 +201,15 @@ class ObstacleWidget(Widget):
         self.height = height
         self.sand = np.zeros((width, height))
 
-    # def load(self):
-
-    #     rectangles = []
-    #     for _ in range(NUM_OBSTABLES):
-    #         pos_x = random.randint(
-    #             MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
-    #         pos_y = random.randint(
-    #             MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
-    #         width = random.randint(10, 40)
-    #         self.sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
-    #         rectangles.append([pos_x, pos_y, width])
-    #         #
-    #     self.canvas.add(Color(0.8, 0.7, 0))
-    #     for rect in rectangles:
-    #         pos_x = rect[0]
-    #         pos_y = rect[1]
-    #         width = rect[2]
-    #         self.canvas.add(Rectangle(pos=(pos_x, pos_y), size=(width, width)))
     def load(self):
 
         rectangles = []
         if RANDOM_OBSTACLES:
-            for _ in range(NUM_OBSTABLES):
+            for _ in range(NUM_OBSTACLES):
                 pos_x = random.randint(
-                    MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
+                    MARGIN_NO_OBSTACLE, self.width - MARGIN_NO_OBSTACLE)
                 pos_y = random.randint(
-                    MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
+                    MARGIN_NO_OBSTACLE, self.height - MARGIN_NO_OBSTACLE)
                 width = random.randint(10, 40)
                 self.sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
                 rectangles.append([pos_x, pos_y, width])
@@ -241,7 +222,7 @@ class ObstacleWidget(Widget):
             print(cells.shape)
             for i in range(max_x):
                 for j in range(max_y):
-                    if cells[i, max_y-1 - j] > 0:
+                    if cells[i, max_y - 1 - j] > 0:
                         self.sand[i, j] = 1
                         rectangles.append([i, j, 1])
         print(self.sand.shape)
@@ -274,11 +255,8 @@ class Game(Widget):
     bat = ObjectProperty(None)
     goal = ObjectProperty(None)
 
-    def __init__(self,model:str,bat_speed:int):
-        """
-        Args:
-            **kwargs:
-        """
+    def __init__(self, model: str, bat_speed: int):
+
         super(Game, self).__init__()
         self.height = 500
         self.width = 500
@@ -301,17 +279,21 @@ class Game(Widget):
         self.bat.pos = [bat_x, bat_y]
         self.bat.velocity = Vector(self.state.bat_speed, 0)
 
-    def _init_goals(self):
-        self.state.goal_x = self.width - MARGIN_NO_OBSTICLE
-
+    def _reset_goal(self):
         valid_goal = False
-        print("Shape : {}".format(self.state.sand.shape))
         while not valid_goal:
             self.state.goal_y = random.randint(
                 MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
+
             if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
                 valid_goal = True
-        # self.state.goals_y = [i for i in range(self.state.largeur - 10)]
+
+    def _init_goals(self):
+        self.state.goal_x = self.width - MARGIN_NO_OBSTACLE
+
+        self._reset_goal()
+        print("Sand Shape : {}".format(self.state.sand.shape))
+
 
     def _game_init(self):
         """Initialize some variables in the gamestate."""
@@ -358,7 +340,7 @@ class Game(Widget):
         # (To discourage traversing outside of forest )
         on_edge = self._bat_on_edge()
         if on_edge:
-            print("Adjust ")
+
             last_reward = REWARD_ON_EDGE
 
         if self.state.sand[int(self.bat.x), int(self.bat.y)] > 0:
@@ -388,11 +370,12 @@ class Game(Widget):
 
         if distance < 20:
             self.state.goal_x = self.width - self.state.goal_x
-            valid_goal = False
-            while not valid_goal:
-                self.state.goal_y = np.random.randint(0, self.height)
-                if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
-                    valid_goal = True
+            # valid_goal = False
+            # while not valid_goal:
+            #     self.state.goal_y = np.random.randint(0, self.height)
+            #     if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
+            #         valid_goal = True
+            self._reset_goal()
 
             last_reward = REWARD_GOAL
 
@@ -401,19 +384,10 @@ class Game(Widget):
 
     def update(self, obstacles: ObstacleWidget, dt):
 
-        # print("In update {}".format(type(self.bat.signal1)))
-        # distance = np.sqrt((self.bat.x - self.state.goal_x) **
-        #                    2 + (self.bat.y - self.state.goal_y) ** 2)
-        """
-        Args:
-            obstacles (ObstacleWidget):
-            dt:
-        """
-       # print(self.bat.pos)
+
         self.state.longueur = self.width
         self.state.largeur = self.height
-        # longueur = 500
-        # largeur = 500
+
         if self.state.first_update:
             obstacles.set_size(self.state.longueur + 1, self.state.largeur + 1)
             if LOAD_SAND:
@@ -459,8 +433,9 @@ class Game(Widget):
         # print(self.state.last_reward)
 
         self.state.sample.append(
-            {'experiment': self.state.experiment, 'time': self.state.time, 'speed': self.state.bat_speed, 'gamma': GAMMA,
+            {'experiment': self.state.experiment, 'time': self.state.time, 'speed': self.state.bat_speed,
+             'gamma': GAMMA,
              'signal1': self.bat.signal1, 'signal2': self.bat.signal2, 'signal3': self.bat.signal3,
-             'distance_to_goal':  self.state.last_distance, 'action': rotation, 'orientation': orientation,
+             'distance_to_goal': self.state.last_distance, 'action': rotation, 'orientation': orientation,
              'reward': self.state.last_reward, 'loss': loss})
         self.state.time += 1

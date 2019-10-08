@@ -15,8 +15,9 @@ from ui.game import Game, ObstacleWidget
 
 random.seed(SEED)
 
-MODEL_FILE = '../tmp_brain.pth'
+MODEL_FILE = '../obstacle_brain_3.pth'
 OUTPUT_FILE = 'ui_game_result.csv'
+BAT_SPEED = 4
 
 if not RANDOM_OBSTACLES:
     with open(SHAPE_FILE, 'rb') as f:
@@ -38,8 +39,8 @@ class BatApp(App):
 
     def build(self):
 
-        self.parent = Game(model=MODEL_FILE,bat_speed=5)
-        # self.parent.state.brain.load(MODEL_FILE)
+        self.parent = Game(model=MODEL_FILE,bat_speed=BAT_SPEED)
+
 
         self.parent.state.experiment = self.experiment
         # self.parent.serve_bat()

@@ -3,8 +3,8 @@ import random
 
 import numpy as np
 
-from settings.constants import ( MARGIN_NO_OBSTICLE,
-                        NUM_OBSTABLES,  RANDOM_OBSTACLES,  SHAPE_FILE)
+from settings.constants import (MARGIN_NO_OBSTACLE,
+                                NUM_OBSTACLES, RANDOM_OBSTACLES, SHAPE_FILE)
 
 class ObstacleMaker:
     def __init__(self, height, width):
@@ -15,11 +15,11 @@ class ObstacleMaker:
     def load(self, sand: np.array) -> np.array:
 
         if RANDOM_OBSTACLES:
-            for _ in range(NUM_OBSTABLES):
+            for _ in range(NUM_OBSTACLES):
                 pos_x = random.randint(
-                    MARGIN_NO_OBSTICLE, self.width - MARGIN_NO_OBSTICLE)
+                    MARGIN_NO_OBSTACLE, self.width - MARGIN_NO_OBSTACLE)
                 pos_y = random.randint(
-                    MARGIN_NO_OBSTICLE, self.height - MARGIN_NO_OBSTICLE)
+                    MARGIN_NO_OBSTACLE, self.height - MARGIN_NO_OBSTACLE)
 
                 width = random.randint(10, 40)
                 sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1

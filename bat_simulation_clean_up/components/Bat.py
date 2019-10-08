@@ -121,7 +121,7 @@ class Bat:
         if self.sensor3[0] > max_x-10 or self.sensor3[0] < 10 or self.sensor3[1] > max_y-10 or self.sensor3[1] < 10:
             self.signal3 = 1.
 
-    def move(self, rotation: float, state: State):
+    def move(self, rotation: float, state: State,compute_obs:bool=False):
         """Move indirection according to rotation.
         """
         # print("In move {}".format(type(self.signal1)))
@@ -137,13 +137,14 @@ class Bat:
         self._update_sensor_signals(state)
 
         # 4. COMPUTE THE DISTANCE TO CLOSEST OBSTICLES FOR EACH OBSERVABLE DEGREE
-        # end_angle = self.angle + self._observable_degree
-        # start_angle = self.angle - self._observable_degree
+        if compute_obs:
+            end_angle = self.angle + self._observable_degree
+            start_angle = self.angle - self._observable_degree
 
-        # step_size = 1
-        # print([i for i in range(start_angle, end_angle + 1, step_size)])
-        # self.observations = [self._find_distance_to_closest_obsticles_along_angle(
-        #     degree, state) for degree in range(start_angle, end_angle + 1, step_size)]
+            step_size = 1
+
+            self.observations = [self._find_distance_to_closest_obsticles_along_angle(
+                degree, state) for degree in range(start_angle, end_angle + 1, step_size)]
 
         # print(len(self.observations))
         # print(self.observations)

@@ -23,7 +23,7 @@ class Game:
     """The central logic of training process.
     """
 
-    def __init__(self, model: Dqn, experiment_number: int, bat_speed: int = BAT_SPEED):
+    def __init__(self, model: Dqn, experiment_number: int, bat_speed: int = BAT_SPEED,training_mode:bool=True):
         """
 
         Args:
@@ -33,6 +33,7 @@ class Game:
 
         self.height = GAME_SIZE
         self.width = GAME_SIZE
+        self.training_mode = training_mode
         self.action2rotation = [
             i for i in range(-ANGLE_RANGE, ANGLE_RANGE + 1, 1)]
 
@@ -172,18 +173,24 @@ class Game:
             self.state.last_reward, last_signal)
 
         rotation = self.action2rotation[action]
-
-        self.bat.move(rotation, self.state)
+        if not self.training_mode:
+            self.bat.move(rotation, self.state,compute_obs = True)
+        else:
+            self.bat.move(rotation, self.state, compute_obs=False)
 
         self._compute_reward()
 
         action_result = self.last_action()
 
-        self.state.sample.append(
-            {'experiment': self.state.experiment, 'time': self.state.time, 'speed': BAT_SPEED, 'gamma': GAMMA,
+        results_row =  {'experiment': self.state.experiment, 'time': self.state.time, 'speed': BAT_SPEED, 'gamma': GAMMA,
                 'signal1': self.bat.signal1, 'signal2': self.bat.signal2, 'signal3': self.bat.signal3,
                 'distance_to_goal':  self.state.last_distance, 'action': rotation, 'orientation': self.state.orientation,
-                'reward':  self.state.last_reward, "loss": loss, "action_result": action_result})
+                'reward':  self.state.last_reward, "loss": loss, "action_result": action_result}
+        if not self.training_mode:
+            for i in range(-ANGLE_RANGE,ANGLE_RANGE + 1):
+                results_row['angle_'+str(i)] = self.bat.observations[i + ANGLE_RANGE]
+
+        self.state.sample.append(results_row)
         self.state.time += 1
 
     def last_action(self) -> str:
