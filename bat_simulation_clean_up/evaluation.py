@@ -1,4 +1,3 @@
-
 import os.path as path
 import random
 
@@ -11,13 +10,13 @@ from components.Game import Game
 MODLE_FILE = 'obstacle_brain_3.pth'
 OUTPUT_CSV = 'eval2.csv'
 
-N_EPISODE = 100
+N_EPISODE = 10
 N_MOVES = 1500
-BAT_SPEED=5
-ADDING_OBS = False
+BAT_SPEED = 3
+ADDING_OBS = True
 
 
-def evaluate(model:str,output_csv:str, bat_speed:int):
+def evaluate(model: str, output_csv: str, bat_speed: int):
     for i in range(N_EPISODE):
 
         random.seed(random.randint(0, 1000))
@@ -34,12 +33,12 @@ def evaluate(model:str,output_csv:str, bat_speed:int):
             columns = ['experiment', 'time', 'speed', 'gamma', 'signal1', 'signal2',
                        'signal3', 'distance_to_goal', 'action', 'orientation', 'reward']
             if ADDING_OBS:
-                for i in range(-ANGLE_RANGE,ANGLE_RANGE + 1):
-                        columns.append('angle_'+str(i))
+                for i in range(-ANGLE_RANGE, ANGLE_RANGE + 1):
+                    columns.append('angle_' + str(i))
             data = pd.DataFrame(columns=columns)
             experiment_number = 1
         if ADDING_OBS:
-            game = Game(model=brain, experiment_number=experiment_number, bat_speed=bat_speed,training_mode=False)
+            game = Game(model=brain, experiment_number=experiment_number, bat_speed=bat_speed, training_mode=False)
         else:
             game = Game(model=brain, experiment_number=experiment_number, bat_speed=bat_speed, training_mode=True)
         done = False
@@ -62,5 +61,5 @@ def evaluate(model:str,output_csv:str, bat_speed:int):
 
 if __name__ == '__main__':
     t1 = time.time()
-    evaluate(model=MODLE_FILE,output_csv=OUTPUT_CSV,bat_speed=BAT_SPEED)
+    evaluate(model=MODLE_FILE, output_csv=OUTPUT_CSV, bat_speed=BAT_SPEED)
     print("Time spend {}".format(time.time() - t1))
