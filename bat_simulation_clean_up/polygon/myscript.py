@@ -1,3 +1,4 @@
+import os
 import pickle
 import pprint
 
@@ -5,10 +6,12 @@ import numpy as np
 
 from polygon_tools import TreeGrid2D, matrixrize_polygon
 
-if __name__ == "__main__":
-    g = TreeGrid2D('./test_hulls.shp')
 
-    distance = 50
+def processing_shape_file(dir_name: str, file_name: str):
+
+    g = TreeGrid2D(dir_name + '/' + fname)
+
+    distance = 30  # distance to a side of boundary
     width = 0.2
     # g.plot(distance_from_center=distance)
 
@@ -22,5 +25,15 @@ if __name__ == "__main__":
     print("Shape : {}".format(cells_np.shape))
     # pp = pprint.PrettyPrinter(width=len(cells[0]) * 4, compact=True)
     # pp.pprint(cells)
-    with open("shape", 'wb') as f:
+
+    output_file = file_name.replace('.shp', '')
+    with open(output_file, 'wb') as f:
         pickle.dump(cells, f)
+
+
+if __name__ == "__main__":
+    dir_name = 'shape_files'
+    directory = os.listdir(dir_name)
+    for fname in directory:
+        if fname.endswith('.shp'):
+            processing_shape_file(dir_name, fname)

@@ -5,14 +5,18 @@ library(TreeLS)
 library(maptools)
 source("./utils.R")
 
-
+install.packages('lidR')
+install.packages('dplyr')
+install.packages('TreeLS')
+install.packages('maptools')
 ###########################
 # Data preprocessing
 ###########################
 SITE_WIDTH = 40
 SHRUNK_FACTOR = 0.15
 HEIGHT_THRESHOOD = 10
-dataPath <- "/Users/ethanchen/Desktop/2019SEM1/DataProject/Shared_repo/"
+setwd('/Users/ethanchen/Desktop/2019SEM1/MAMIF/bat_simulation_clean_up/R_code')
+dataPath <- "/Users/ethanchen/Desktop/2019SEM1/LAS"
 
 shapeFileCreation <- function(file_name){
    
@@ -73,4 +77,9 @@ shapeFileCreation <- function(file_name){
 }
 
 
-shapeFileCreation('SP09_Coalmine_ck.las')
+#shapeFileCreation('SP09_Coalmine_ck.las')
+
+for(f in list.files(dataPath)){
+   print(f)
+   shapeFileCreation(f)
+}
