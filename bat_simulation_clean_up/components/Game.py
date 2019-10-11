@@ -51,6 +51,7 @@ class Game:
             MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)
 
         self.bat = Bat(x=bat_x, y=bat_y, speed=bat_speed)
+        self.bat_speed = bat_speed
 
         self.bat._update_sensor_position()
         self.bat._update_sensor_signals(self.state)
@@ -123,7 +124,7 @@ class Game:
             self.bat.velocity = Vector(0.2, 0).rotate(self.bat.angle)
             last_reward = REWARD_HIT_TREE
         elif not on_edge:  # otherwise
-            self.bat.velocity = Vector(BAT_SPEED, 0).rotate(self.bat.angle)
+            self.bat.velocity = Vector(self.bat_speed, 0).rotate(self.bat.angle)
             last_reward = REWARD_MOVE
             if distance < self.state.last_distance:
                 last_reward = REWARD_BETTER_DISTANCE
@@ -184,7 +185,7 @@ class Game:
 
         action_result = self.last_action()
 
-        results_row =  {'experiment': self.state.experiment, 'time': self.state.time, 'speed': BAT_SPEED, 'gamma': GAMMA,
+        results_row =  {'experiment': self.state.experiment, 'time': self.state.time, 'speed': self.bat_speed, 'gamma': GAMMA,
                 'signal1': self.bat.signal1, 'signal2': self.bat.signal2, 'signal3': self.bat.signal3,
                 'distance_to_goal':  self.state.last_distance, 'action': rotation, 'orientation': self.state.orientation,
                 'reward':  self.state.last_reward, "loss": loss, "action_result": action_result}

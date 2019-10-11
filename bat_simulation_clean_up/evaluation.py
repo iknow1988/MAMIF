@@ -10,17 +10,19 @@ from components.Game import Game
 # MODLE_FILE = 'obstacle_brain_3.pth'
 # OUTPUT_CSV = 'eval2.csv'
 
-N_EPISODE = 100
+N_EPISODE = 10
 N_MOVES = 1500
 
 ADDING_OBS = False # Adding bat observations
 
 
 def evaluate(model: str, output_csv: str, bat_speed: int,shape_file:str=SHAPE_FILE):
+
     for i in range(N_EPISODE):
 
         random.seed(random.randint(0, 1000))
         print("Episode : {}".format(i))
+        print("S : {}".format(bat_speed))
 
         brain = Dqn(5, 2 * ANGLE_RANGE + 1, GAMMA)
         if path.exists(model):
@@ -64,10 +66,11 @@ def evaluate(model: str, output_csv: str, bat_speed: int,shape_file:str=SHAPE_FI
 
 if __name__ == '__main__':
     shape_file = '101 sharps'
+    output_csv = "eval_speed_" + shape_file + ".csv"
     t1 = time.time()
+
     for speed in range(1,6):
         model_file = "obstacle_brain_" + str(speed) + '.pth'
-        output_csv = "eval_speed_" + shape_file +"_"+str(speed) + ".csv"
         evaluate(model=model_file, output_csv=output_csv, bat_speed=speed,shape_file=shape_file)
 
     print("Time spend {}".format(time.time() - t1))
