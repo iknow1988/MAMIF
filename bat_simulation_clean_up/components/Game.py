@@ -164,7 +164,7 @@ class Game:
                 self.state.sand = self.obstacles.load(self.state.sand,self.shape_file)
             print("Sum")
             print(np.sum(self.state.sand))
-            print(self.state.sand.shape)
+            print("Game grid size : {}".format(self.state.sand.shape))
 
         ###############
         # Compute action

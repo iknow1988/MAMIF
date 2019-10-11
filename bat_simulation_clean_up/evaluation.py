@@ -63,6 +63,11 @@ def evaluate(model: str, output_csv: str, bat_speed: int,shape_file:str=SHAPE_FI
 
 
 if __name__ == '__main__':
+    shape_file = '101 sharps'
     t1 = time.time()
-    evaluate(model=MODLE_FILE, output_csv=OUTPUT_CSV, bat_speed=BAT_SPEED,shape_file='shape')
+    for speed in range(1,6):
+        model_file = "obstacle_brain_" + str(speed) + '.pth'
+        output_csv = "eval_speed_" + shape_file +"_"+str(speed) + ".csv"
+        evaluate(model=MODLE_FILE, output_csv=OUTPUT_CSV, bat_speed=BAT_SPEED,shape_file=shape_file)
+
     print("Time spend {}".format(time.time() - t1))
