@@ -12,7 +12,7 @@ class ObstacleMaker:
         self.height = height
         self.width = width
 
-    def load(self, sand: np.array) -> np.array:
+    def load(self, sand: np.array,shape_file:str=SHAPE_FILE) -> np.array:
 
         if RANDOM_OBSTACLES:
             for _ in range(NUM_OBSTACLES):
@@ -25,7 +25,8 @@ class ObstacleMaker:
                 sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
         else:
             cells = None
-            with open(SHAPE_FILE, 'rb') as f:
+            print("Loading shapefile : {}".format(shape_file))
+            with open(shape_file, 'rb') as f:
                 cells = np.array(pickle.load(f))
 
             max_x, max_y = cells.shape

@@ -13,7 +13,7 @@ from settings.constants import (ANGLE_RANGE,  BAT_SPEED,
                        MARGIN_TO_GOAL_X_AXIS, OFFSET,
                        REWARD_BETTER_DISTANCE,
                        REWARD_GOAL, REWARD_HIT_TREE, REWARD_MOVE,
-                       REWARD_ON_EDGE, SITE_MARGIN)
+                       REWARD_ON_EDGE, SITE_MARGIN,SHAPE_FILE)
 
 from .state import State
 from .Bat import Bat
@@ -23,7 +23,8 @@ class Game:
     """The central logic of training process.
     """
 
-    def __init__(self, model: Dqn, experiment_number: int, bat_speed: int = BAT_SPEED,training_mode:bool=True):
+    def __init__(self, model: Dqn, experiment_number: int, bat_speed: int = BAT_SPEED,training_mode:bool=True,
+                 shape_file:str=SHAPE_FILE):
         """
 
         Args:
@@ -42,6 +43,7 @@ class Game:
         self.state.brain = model
         self.state.experiment = experiment_number
         self.state.sand = np.zeros((self.height, self.width))
+        self.shape_file = shape_file
 
         # Setup Bat object
         bat_x = MARGIN_TO_GOAL_X_AXIS
@@ -159,7 +161,7 @@ class Game:
             self._game_init()
 
             if LOAD_SAND:
-                self.state.sand = self.obstacles.load(self.state.sand)
+                self.state.sand = self.obstacles.load(self.state.sand,self.shape_file)
             print("Sum")
             print(np.sum(self.state.sand))
             print(self.state.sand.shape)

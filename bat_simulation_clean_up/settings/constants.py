@@ -14,7 +14,7 @@ LOAD_SAND = True  # False => No obstacles
 OUTPUT_FILE = 'tmp.csv'
 SEED = 101
 SHAPE_FILE = '../shape'
-GAME_SIZE = 301
+GAME_SIZE = 501
 # Determine where the goal's x coordinate
 MARGIN_TO_GOAL_X_AXIS = BAT_SPEED * 10
 

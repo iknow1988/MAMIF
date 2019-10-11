@@ -4,7 +4,7 @@ import random
 import pandas as pd
 import time
 from ai.model import Dqn
-from settings.constants import ANGLE_RANGE, GAMMA, SEED
+from settings.constants import ANGLE_RANGE, GAMMA, SEED,SHAPE_FILE
 from components.Game import Game
 
 MODLE_FILE = 'obstacle_brain_3.pth'
@@ -16,7 +16,7 @@ BAT_SPEED = 3
 ADDING_OBS = True
 
 
-def evaluate(model: str, output_csv: str, bat_speed: int):
+def evaluate(model: str, output_csv: str, bat_speed: int,shape_file:str=SHAPE_FILE):
     for i in range(N_EPISODE):
 
         random.seed(random.randint(0, 1000))
@@ -38,9 +38,12 @@ def evaluate(model: str, output_csv: str, bat_speed: int):
             data = pd.DataFrame(columns=columns)
             experiment_number = 1
         if ADDING_OBS:
-            game = Game(model=brain, experiment_number=experiment_number, bat_speed=bat_speed, training_mode=False)
+            game = Game(model=brain, experiment_number=experiment_number, bat_speed=bat_speed, training_mode=False,
+                        shape_file=shape_file)
         else:
-            game = Game(model=brain, experiment_number=experiment_number, bat_speed=bat_speed, training_mode=True)
+            game = Game(model=brain, experiment_number=experiment_number, bat_speed=bat_speed, training_mode=True,
+                        shape_file=shape_file)
+        print("Size : {}".format(game.state.sand.shape))
         done = False
         n_actions = 0
         while not done:
@@ -61,5 +64,5 @@ def evaluate(model: str, output_csv: str, bat_speed: int):
 
 if __name__ == '__main__':
     t1 = time.time()
-    evaluate(model=MODLE_FILE, output_csv=OUTPUT_CSV, bat_speed=BAT_SPEED)
+    evaluate(model=MODLE_FILE, output_csv=OUTPUT_CSV, bat_speed=BAT_SPEED,shape_file='shape')
     print("Time spend {}".format(time.time() - t1))

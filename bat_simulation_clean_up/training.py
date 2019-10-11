@@ -9,18 +9,12 @@ from components.Game import Game
 
 random.seed(SEED)
 
-MODLE_FILE = 'base_2.pth'
-OUTPUT_CSV = 'speed2.csv'
-BAT_SPEED = 5
+SHAPE_FILE = 'shape'
 
-
-# config = {'MODEL_FILE': 'tmp_brain.pth',
-#           'OUTPUT_CSV': 'tmp.csv',
-#           'BAT_SPEED': 5}
 
 
 def training(model_file: str, output_csv: str, bat_speed: int, num_episodes: int = N_EPISODE,
-             moves_per_episode: int = N_MOVES, update_only_better_reward: bool = True):
+             moves_per_episode: int = N_MOVES, update_only_better_reward: bool = True,shap_file:str='shape'):
     for i in range(num_episodes):
 
         print("Episode : {}".format(i))
@@ -41,7 +35,8 @@ def training(model_file: str, output_csv: str, bat_speed: int, num_episodes: int
             data = pd.DataFrame(columns=columns)
             experiment_number = 1
 
-        game = Game(model=brain, experiment_number=experiment_number, bat_speed=BAT_SPEED,training_mode=True)
+        game = Game(model=brain, experiment_number=experiment_number, bat_speed=bat_speed,training_mode=True,
+                    shape_file=shap_file)
 
         for _ in range(moves_per_episode):
             # Each update called would result an additional one row of data store in game.state.sample
@@ -86,4 +81,5 @@ if __name__ == '__main__':
         model_file = "base_brain_" + str(speed) + '.pth'
         output_csv = "obstacle_speed_" + str(speed) + ".csv"
 
-        training(model_file=model_file, output_csv=output_csv, bat_speed=speed,update_only_better_reward=False)
+        training(model_file=model_file, output_csv=output_csv, bat_speed=speed,update_only_better_reward=False,
+                 shap_file=SHAPE_FILE)

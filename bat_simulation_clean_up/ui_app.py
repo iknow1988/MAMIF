@@ -15,9 +15,9 @@ from ui.game import Game, ObstacleWidget
 
 random.seed(SEED)
 
-MODEL_FILE = '../obstacle_brain_5.pth'
+MODEL_FILE = '../obstacle_brain_2.pth'
 OUTPUT_FILE = 'ui_game_result.csv'
-BAT_SPEED = 5
+BAT_SPEED = 2
 
 if not RANDOM_OBSTACLES:
     with open(SHAPE_FILE, 'rb') as f:
