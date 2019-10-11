@@ -7,13 +7,13 @@ from ai.model import Dqn
 from settings.constants import ANGLE_RANGE, GAMMA, SEED,SHAPE_FILE
 from components.Game import Game
 
-MODLE_FILE = 'obstacle_brain_3.pth'
-OUTPUT_CSV = 'eval2.csv'
+# MODLE_FILE = 'obstacle_brain_3.pth'
+# OUTPUT_CSV = 'eval2.csv'
 
-N_EPISODE = 10
+N_EPISODE = 100
 N_MOVES = 1500
-BAT_SPEED = 3
-ADDING_OBS = True
+
+ADDING_OBS = False # Adding bat observations
 
 
 def evaluate(model: str, output_csv: str, bat_speed: int,shape_file:str=SHAPE_FILE):
@@ -68,6 +68,6 @@ if __name__ == '__main__':
     for speed in range(1,6):
         model_file = "obstacle_brain_" + str(speed) + '.pth'
         output_csv = "eval_speed_" + shape_file +"_"+str(speed) + ".csv"
-        evaluate(model=MODLE_FILE, output_csv=OUTPUT_CSV, bat_speed=BAT_SPEED,shape_file=shape_file)
+        evaluate(model=model_file, output_csv=output_csv, bat_speed=speed,shape_file=shape_file)
 
     print("Time spend {}".format(time.time() - t1))
