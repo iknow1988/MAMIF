@@ -14,19 +14,20 @@ from settings.constants import (GAME_SIZE, RANDOM_OBSTACLES, SEED,
 from ui.game import Game, ObstacleWidget
 
 random.seed(SEED)
-
-MODEL_FILE = '../obstacle_brain_2.pth'
+random.seed(123)
+MODEL_FILE = '../base_brain_153.pth'
 OUTPUT_FILE = 'ui_game_result.csv'
-BAT_SPEED = 2
+BAT_SPEED = 5
 
 if not RANDOM_OBSTACLES:
     with open(SHAPE_FILE, 'rb') as f:
         cells = pickle.load(f)
         size = len(cells)//2 + 1
 else:
-    size = GAME_SIZE
+    size = GAME_SIZE//2
 Window.size = (size, size)
-
+print(size)
+# Window.size = (500, 500)
 
 class BatApp(App):
 

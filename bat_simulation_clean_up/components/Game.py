@@ -13,7 +13,7 @@ from settings.constants import (ANGLE_RANGE,  BAT_SPEED,
                        MARGIN_TO_GOAL_X_AXIS, OFFSET,
                        REWARD_BETTER_DISTANCE,
                        REWARD_GOAL, REWARD_HIT_TREE, REWARD_MOVE,
-                       REWARD_ON_EDGE, SITE_MARGIN,SHAPE_FILE)
+                       REWARD_ON_EDGE, SITE_MARGIN,SHAPE_FILE,MULTIPLE_GOALS)
 
 from .state import State
 from .Bat import Bat
@@ -144,6 +144,12 @@ class Game:
         Returns:
             List: list of signals
         """
+
+
+        if MULTIPLE_GOALS:
+            self.state.goal_y = min([i for i in range(MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)],
+                                key=lambda x:np.sqrt((self.bat.pos.x - self.state.goal_x )**2 + (self.bat.pos.y - x)**2))
+
         xx = self.state.goal_x - self.bat.pos.x
         yy = self.state.goal_y - self.bat.pos.y
 

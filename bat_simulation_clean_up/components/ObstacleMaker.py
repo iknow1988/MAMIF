@@ -21,7 +21,7 @@ class ObstacleMaker:
                 pos_y = random.randint(
                     MARGIN_NO_OBSTACLE, self.height - MARGIN_NO_OBSTACLE)
 
-                width = random.randint(10, 40)
+                width = random.randint(5, 10)
                 sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
         else:
             cells = None
@@ -33,7 +33,10 @@ class ObstacleMaker:
             print(cells.shape)
             for i in range(max_x):
                 for j in range(max_y):
+
                     if cells[i, max_y-1 - j] > 0:
                         sand[i, j] = 1
+                    # if cells[i, j] > 0:
+                    #     sand[i, j] = 1
 
         return sand

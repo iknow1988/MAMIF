@@ -78,8 +78,8 @@ def training(model_file: str, output_csv: str, bat_speed: int, num_episodes: int
 
 if __name__ == '__main__':
     for speed in range(1,6):
-        model_file = "base_brain_" + str(speed) + '.pth'
-        output_csv = "obstacle_speed_" + str(speed) + ".csv"
+        model_file = "base_brain_15_" + str(speed) + '.pth'
+        output_csv = "base_speed_" + str(speed) + ".csv"
 
         training(model_file=model_file, output_csv=output_csv, bat_speed=speed,update_only_better_reward=False,
                  shap_file=SHAPE_FILE)

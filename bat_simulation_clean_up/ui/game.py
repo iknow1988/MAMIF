@@ -15,7 +15,7 @@ from settings.constants import (ANGLE_RANGE, BAT_OBSERVABLE_DISTANCE, BAT_SPEED,
                                 NUM_OBSTACLES, OFFSET, PRINT_PATH,
                                 RANDOM_OBSTACLES, REWARD_BETTER_DISTANCE, REWARD_GOAL,
                                 REWARD_HIT_TREE, REWARD_MOVE, REWARD_ON_EDGE,
-                                SHAPE_FILE, SITE_MARGIN)
+                                SHAPE_FILE, SITE_MARGIN,MULTIPLE_GOALS)
 
 from components.state import State
 
@@ -210,7 +210,7 @@ class ObstacleWidget(Widget):
                     MARGIN_NO_OBSTACLE, self.width - MARGIN_NO_OBSTACLE)
                 pos_y = random.randint(
                     MARGIN_NO_OBSTACLE, self.height - MARGIN_NO_OBSTACLE)
-                width = random.randint(10, 40)
+                width = random.randint(5, 10)
                 self.sand[pos_x: pos_x + width, pos_y: pos_y + width] = 1
                 rectangles.append([pos_x, pos_y, width])
         else:
@@ -220,11 +220,15 @@ class ObstacleWidget(Widget):
 
             max_x, max_y = cells.shape
             print(cells.shape)
+            tmp_cells = np.array(cells).T
             for i in range(max_x):
                 for j in range(max_y):
-                    if cells[i, max_y - 1 - j] > 0:
+                    if tmp_cells[i, max_y- 1 - j] > 0:
                         self.sand[i, j] = 1
                         rectangles.append([i, j, 1])
+                    # if cells[i,  j] > 0:
+                    #     self.sand[i, j] = 1
+                    #     rectangles.append([i, j, 1])
         print(self.sand.shape)
         print(type(self.sand))
         self.canvas.add(Color(0.8, 0.7, 0))
@@ -370,11 +374,11 @@ class Game(Widget):
 
         if distance < 20:
             self.state.goal_x = self.width - self.state.goal_x
-            # valid_goal = False
-            # while not valid_goal:
-            #     self.state.goal_y = np.random.randint(0, self.height)
-            #     if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
-            #         valid_goal = True
+            valid_goal = False
+            while not valid_goal:
+                self.state.goal_y = np.random.randint(0, self.height)
+                if self.state.sand[self.state.goal_x, self.state.goal_y] == 0:
+                    valid_goal = True
             self._reset_goal()
 
             last_reward = REWARD_GOAL
@@ -401,8 +405,11 @@ class Game(Widget):
             # print(np.sum(self.state.sand))
             # print(self.state.sand.shape)
 
-        # goal_y = min(goals_y, key=lambda x: np.sqrt(
+        # goal_y = min([i for i in range(largeur - 10)], key=lambda x: np.sqrt(
         #     (self.bat.x - goal_x)**2 + (self.bat.y - x)**2))
+        if MULTIPLE_GOALS:
+            self.state.goal_y = min([i for i in range(MARGIN_TO_GOAL_X_AXIS, self.height - MARGIN_TO_GOAL_X_AXIS)],
+                                key=lambda x:np.sqrt((self.bat.x - self.state.goal_x )**2 + (self.bat.y - x)**2))
         xx = self.state.goal_x - self.bat.x
         yy = self.state.goal_y - self.bat.y
 
@@ -423,9 +430,9 @@ class Game(Widget):
         self.goal.pos = (self.state.goal_x, self.state.goal_y)
 
         if PRINT_PATH:
-            self.canvas.add(Color(135, 206, 235))
+            self.canvas.add(Color(239, 225, 200))
             self.canvas.add(
-                Ellipse(pos=(self.bat.x, self.bat.y), size=(2, 2)))
+                Ellipse(pos=(self.bat.x, self.bat.y), size=(1, 1)))
 
         # print("X : {} , Y : {}".format(self.bat.x, self.bat.y))
         # print(self.state.sand.shape)

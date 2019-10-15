@@ -5,16 +5,18 @@ ANGLE_RANGE = 20
 
 # ENV SETTINGS
 OFFSET = BAT_SPEED * 2
-PRINT_PATH = True
-NUM_OBSTACLES = 20
-RANDOM_OBSTACLES = False  # Ture => Use random obstacles
-MARGIN_NO_OBSTACLE = 10  # Form the boundaries where obstacles are within.
+PRINT_PATH = False
+NUM_OBSTACLES = 400
+RANDOM_OBSTACLES = True  # Ture => Use random obstacles
+MARGIN_NO_OBSTACLE = 30  # Form the boundaries where obstacles are within.
 SITE_MARGIN = 1
-LOAD_SAND = True  # False => No obstacles
+LOAD_SAND = False  # False => No obstacles
 OUTPUT_FILE = 'tmp.csv'
 SEED = 101
-SHAPE_FILE = '../119 Dunse'
-GAME_SIZE = 301
+SHAPE_FILE = '../carpark'
+GAME_SIZE = 600
+MULTIPLE_GOALS = True
+
 # Determine where the goal's x coordinate
 MARGIN_TO_GOAL_X_AXIS = BAT_SPEED * 10
 
